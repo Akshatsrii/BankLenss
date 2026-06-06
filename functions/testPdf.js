@@ -1,39 +1,39 @@
-const pdfjsLib = require("pdfjs-dist/legacy/build/pdf.js");
+const fs = require("fs");
+const path = require("path");
+const { parseStatement, ERRORS } = require("./parsers/index");
 
-async function readPdf(filePath) {
-  console.log(`\n📄 Reading PDF: ${filePath}\n`);
+async function test() {
+  const pdfPath = process.argv[2];
+  const password = process.argv[3] || "";
 
-  const loadingTask = pdfjsLib.getDocument(filePath);
-
-  const pdf = await loadingTask.promise;
-
-  console.log(`Total pages: ${pdf.numPages}\n`);
-
-  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-
-    const page = await pdf.getPage(pageNum);
-
-    const content = await page.getTextContent();
-
-    const text = content.items
-      .map((item) => item.str)
-      .join(" ");
-
-    console.log(`--- Page ${pageNum} ---`);
-    console.log(text);
-    console.log("");
+  if (!pdfPath) {
+    console.error("Usage: node testParser.js <pdf-path> [password]");
+    process.exit(1);
   }
 
-  console.log("✅ PDF reading complete.");
+  const buffer = fs.readFileSync(path.resolve(pdfPath));
+
+  try {
+    const result = await parseStatement(buffer, password);
+
+    console.log(`\n✅ Bank detected: ${result.bank}`);
+    console.log(`📊 Transactions found: ${result.transactions.length}\n`);
+
+    // Print first 5 transactions as preview
+    const preview = result.transactions.slice(0, 5);
+    console.table(preview);
+
+  } catch (err) {
+    console.error(`\n❌ Error [${err.code}]: ${err.message}`);
+
+    if (err.code === ERRORS.WRONG_PASSWORD) {
+      console.error("→ Check the password in docs/samples.md");
+    } else if (err.code === ERRORS.UNSUPPORTED_BANK) {
+      console.error("→ Add a new parser in functions/parsers/");
+    } else if (err.code === ERRORS.CORRUPT_PDF) {
+      console.error("→ The PDF file may be damaged");
+    }
+  }
 }
 
-const pdfPath = process.argv[2];
-
-if (!pdfPath) {
-  console.error("Usage: node testPdf.js <path-to-pdf>");
-  process.exit(1);
-}
-
-readPdf(pdfPath).catch((err) => {
-  console.error("❌ Error reading PDF:", err.message);
-});
+test();
