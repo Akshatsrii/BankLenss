@@ -55,12 +55,12 @@ export default function Navbar() {
     return () => clearInterval(id);
   }, []);
 
-  const linkClass = (to: string) =>
-    `relative flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-medium transition-all duration-150 select-none ${
-      pathname === to
-        ? "text-slate-100 bg-blue-500/10 after:absolute after:-bottom-[17px] after:left-3 after:right-3 after:h-0.5 after:bg-blue-500 after:rounded-t"
-        : "text-slate-400 hover:text-slate-100 hover:bg-white/5"
-    }`;
+ const linkClass = (to) =>
+  `relative flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-medium transition-all duration-150 select-none ${
+    pathname === to
+      ? "text-slate-100 bg-blue-500/10 after:absolute after:-bottom-[17px] after:left-3 after:right-3 after:h-0.5 after:bg-blue-500 after:rounded-t"
+      : "text-slate-400 hover:text-slate-100 hover:bg-white/5"
+  }`;
 
   return (
     <nav
