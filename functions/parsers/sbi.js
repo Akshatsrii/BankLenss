@@ -16,7 +16,7 @@
 function detect(text) {
   return (
     text.includes("State Bank of India") ||
-    text.includes("SBI") && text.includes("Account Statement")
+    text.includes("SBI")
   );
 }
 

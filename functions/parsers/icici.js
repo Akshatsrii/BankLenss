@@ -17,7 +17,7 @@ function detect(text) {
   return (
     text.includes("ICICI BANK") ||
     text.includes("ICICI Bank") ||
-    text.includes("ICICI bank")
+    text.includes("ICICI")
   );
 }
 

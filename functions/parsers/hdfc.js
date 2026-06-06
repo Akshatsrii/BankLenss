@@ -16,7 +16,7 @@ function detect(text) {
   return (
     text.includes("HDFC BANK") ||
     text.includes("HDFC Bank") ||
-    text.includes("HDB Financial")
+    text.includes("HDFC")
   );
 }
 

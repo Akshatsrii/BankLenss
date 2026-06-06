@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const { parseStatement, ERRORS } = require("./parsers/index");
+const { parseStatement, ERRORS } = require("./parsers");
 
 async function test() {
   const pdfPath = process.argv[2];
@@ -11,28 +11,36 @@ async function test() {
     process.exit(1);
   }
 
-  const buffer = fs.readFileSync(path.resolve(pdfPath));
-
   try {
+    const buffer = fs.readFileSync(path.resolve(pdfPath));
+
     const result = await parseStatement(buffer, password);
 
     console.log(`\n✅ Bank detected: ${result.bank}`);
     console.log(`📊 Transactions found: ${result.transactions.length}\n`);
 
-    // Print first 5 transactions as preview
-    const preview = result.transactions.slice(0, 5);
-    console.table(preview);
-
+    console.table(result.transactions.slice(0, 5));
   } catch (err) {
-    console.error(`\n❌ Error [${err.code}]: ${err.message}`);
+    console.error(`\n❌ Error [${err.code || "UNKNOWN"}]: ${err.message}`);
 
-    if (err.code === ERRORS.WRONG_PASSWORD) {
-      console.error("→ Check the password in docs/samples.md");
-    } else if (err.code === ERRORS.UNSUPPORTED_BANK) {
-      console.error("→ Add a new parser in functions/parsers/");
-    } else if (err.code === ERRORS.CORRUPT_PDF) {
-      console.error("→ The PDF file may be damaged");
+    switch (err.code) {
+      case ERRORS.WRONG_PASSWORD:
+        console.error("→ Check the password in docs/samples.md");
+        break;
+
+      case ERRORS.UNSUPPORTED_BANK:
+        console.error("→ Add a new parser in functions/parsers/");
+        break;
+
+      case ERRORS.CORRUPT_PDF:
+        console.error("→ The PDF file may be damaged");
+        break;
+
+      default:
+        console.error(err);
     }
+
+    process.exit(1);
   }
 }
 
