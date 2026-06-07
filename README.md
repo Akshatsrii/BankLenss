@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://img.icons8.com/fluency/96/bank-building.png" alt="Bank Statement Digitizer" width="96"/>
+<img src="https://raw.githubusercontent.com/Akshatsrii/BankLens/main/OIP.jpg" alt="Bank Statement Digitizer" width="80"/>
 
 # Bank Statement Digitizer
 
@@ -14,13 +14,11 @@
 
 <br/>
 
-<img src="https://img.icons8.com/color/48/sbi-bank.png" width="36" title="SBI"/>
+<img src="https://raw.githubusercontent.com/Akshatsrii/BankLens/main/OIP.jpg" width="40" title="SBI" style="border-radius:8px"/>
 &nbsp;&nbsp;
-<img src="https://img.icons8.com/color/48/hdfc-bank.png" width="36" title="HDFC"/>
+<img src="https://raw.githubusercontent.com/Akshatsrii/BankLens/main/OIP%20(1).jpg" width="40" title="HDFC" style="border-radius:8px"/>
 &nbsp;&nbsp;
-<img src="https://img.icons8.com/color/48/icici-bank.png" width="36" title="ICICI"/>
-&nbsp;&nbsp;
-<img src="https://img.icons8.com/color/48/axis-bank.png" width="36" title="Axis"/>
+<img src="https://raw.githubusercontent.com/Akshatsrii/BankLens/main/OIP%20(2).jpg" width="40" title="ICICI" style="border-radius:8px"/>
 
 **Supports SBI · HDFC · ICICI · Axis Bank**
 
@@ -93,25 +91,25 @@ statements/{uid}/*.pdf      /statements/{id}
 <table>
 <tr>
 <td align="center" width="25%">
-<img src="https://img.icons8.com/color/64/sbi-bank.png" width="48"/><br/>
+<img src="https://raw.githubusercontent.com/Akshatsrii/BankLens/main/OIP.jpg" width="60"/><br/>
 <b>State Bank of India</b><br/>
 <code>sbi.js</code><br/>
 <sub>Date: DD/MM/YYYY<br/>Cols: Debit / Credit</sub>
 </td>
 <td align="center" width="25%">
-<img src="https://img.icons8.com/color/64/hdfc-bank.png" width="48"/><br/>
+<img src="https://raw.githubusercontent.com/Akshatsrii/BankLens/main/OIP%20(1).jpg" width="60"/><br/>
 <b>HDFC Bank</b><br/>
 <code>hdfc.js</code><br/>
 <sub>Date: DD-MMM-YYYY<br/>Cols: Withdrawal / Deposit</sub>
 </td>
 <td align="center" width="25%">
-<img src="https://img.icons8.com/color/64/icici-bank.png" width="48"/><br/>
+<img src="https://raw.githubusercontent.com/Akshatsrii/BankLens/main/OIP%20(2).jpg" width="60"/><br/>
 <b>ICICI Bank</b><br/>
 <code>icici.js</code><br/>
 <sub>Date: DD-MMM-YYYY<br/>S.No prefix detection</sub>
 </td>
 <td align="center" width="25%">
-<img src="https://img.icons8.com/color/64/axis-bank.png" width="48"/><br/>
+<img src="https://img.shields.io/badge/AXIS-Coming_Day_6-14532D?style=flat-square" width="80"/><br/><br/>
 <b>Axis Bank</b><br/>
 <code>axis.js</code><br/>
 <sub>⏳ Coming Day 6</sub>
