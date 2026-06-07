@@ -1,15 +1,6 @@
-/**
- * unlockPdf.js
- *
- * Responsibilities:
- * - Load a PDF buffer using pdfjs-dist
- * - Handle password-protected PDFs
- * - Throw typed errors for wrong password / corrupt file
- */
-
 const pdfjsLib = require("pdfjs-dist/legacy/build/pdf.js");
 
-// Typed error codes
+
 const PDF_ERRORS = {
   WRONG_PASSWORD: "WRONG_PASSWORD",
   CORRUPT_PDF: "CORRUPT_PDF",
@@ -19,7 +10,7 @@ const PDF_ERRORS = {
 /**
  * Creates a typed error with a code attached
  * @param {string} message
- * @param {string} code - one of PDF_ERRORS
+ * @param {string} code 
  * @returns {Error}
  */
 function createError(message, code) {
@@ -29,7 +20,6 @@ function createError(message, code) {
 }
 
 /**
- * Unlocks and loads a PDF from a buffer
  *
  * @param {Buffer|Uint8Array} buffer - raw PDF bytes
  * @param {string} password - PDF user password (pass "" for non-protected)
