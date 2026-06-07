@@ -20,7 +20,7 @@
 &nbsp;&nbsp;
 <img src="https://raw.githubusercontent.com/Akshatsrii/BankLens/main/OIP%20(2).jpg" width="40" title="ICICI" style="border-radius:8px"/>
 
-**Supports SBI · HDFC · ICICI · Axis Bank**
+**Supports SBI · HDFC · ICICI **
 
 > Upload a password-protected PDF → get clean JSON transactions in seconds.
 
