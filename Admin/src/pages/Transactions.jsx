@@ -6,7 +6,7 @@
  * - Active filter chips with X to remove
  * - Reset filters button
  * - URL sync (filters preserved on refresh, shareable links)
- * - Transaction table with pagination
+ * - Transaction table with pagination + page size selector
  * - Warning for invalid filter combinations
  */
 
@@ -40,6 +40,10 @@ export default function Transactions() {
 
   const handlePageChange = useCallback((newPage) => {
     setFilters({ page: newPage });
+  }, [setFilters]);
+
+  const handlePageSizeChange = useCallback((newSize) => {
+    setFilters({ pageSize: newSize, page: 1 });
   }, [setFilters]);
 
   const handleRemoveChip = useCallback((key) => {
@@ -95,8 +99,10 @@ export default function Transactions() {
           error={error}
           total={total}
           page={filters.page}
+          pageSize={filters.pageSize}
           totalPages={totalPages}
           onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
         />
 
       </div>
