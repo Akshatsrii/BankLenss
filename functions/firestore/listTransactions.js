@@ -5,23 +5,24 @@
  *
  * Accepts:
  * {
- *   userId     : string   (required — from auth context)
- *   from       : string   (optional — YYYY-MM-DD start date)
- *   to         : string   (optional — YYYY-MM-DD end date)
- *   minAmount  : number   (optional — min of debit or credit)
- *   maxAmount  : number   (optional — max of debit or credit)
- *   type       : string   (optional — "debit" | "credit")
- *   search     : string   (optional — description substring match)
- *   page       : number   (default 1)
- *   pageSize   : number   (default 20, max 100)
+ *   userId      : string   (required — from auth context)
+ *   statementId : string   (optional — filter by specific statement)
+ *   from        : string   (optional — YYYY-MM-DD start date)
+ *   to          : string   (optional — YYYY-MM-DD end date)
+ *   minAmount   : number   (optional — min of debit or credit)
+ *   maxAmount   : number   (optional — max of debit or credit)
+ *   type        : string   (optional — "debit" | "credit")
+ *   search      : string   (optional — description substring match)
+ *   page        : number   (default 1)
+ *   pageSize    : number   (default 20, max 100)
  * }
  *
  * Returns:
  * {
- *   data  : transaction[]
- *   total : number
- *   page  : number
- *   pageSize: number
+ *   data      : transaction[]
+ *   total     : number
+ *   page      : number
+ *   pageSize  : number
  *   totalPages: number
  * }
  */
@@ -37,6 +38,7 @@ const DEFAULT_PAGE_SIZE = 20;
  */
 async function listTransactions({
   userId,
+  statementId,                    // ← added
   from,
   to,
   minAmount,
@@ -59,6 +61,11 @@ async function listTransactions({
   let query = db
     .collection("transactions")
     .where("userId", "==", userId);
+
+  // Statement filter — narrow to a single uploaded statement
+  if (statementId) {
+    query = query.where("statementId", "==", statementId); // ← added
+  }
 
   // Date range filter
   // Uses string comparison — works because dates are YYYY-MM-DD
@@ -125,6 +132,7 @@ async function listTransactions({
 
   console.log(
     `[listTransactions] user: ${userId} | ` +
+    `statementId: ${statementId || "all"} | ` +
     `filters: from=${from} to=${to} type=${type} search=${search} | ` +
     `total: ${total} | page: ${currentPage}/${totalPages}`
   );
