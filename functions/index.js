@@ -6,6 +6,7 @@ const { parseStatement, ERRORS } = require("./parsers/index");
 const { writeStatement } = require("./firestore/writeStatement");
 const { writeTransactions } = require("./firestore/writeTransactions");
 const { listTransactions } = require("./firestore/listTransactions");
+const { listStatements } = require("./firestore/listStatements");
 
 initializeApp();
 
@@ -154,6 +155,27 @@ exports.listTransactions = onCall(async (request) => {
     return result;
   } catch (err) {
     console.error("[listTransactions] Error:", err);
+    throw new HttpsError("internal", err.message);
+  }
+});
+
+// ─── listStatements ───────────────────────────────────────────
+/**
+ * Callable: listStatements
+ *
+ * Input:  none (userId taken from auth context)
+ * Output: { data: statement[] }
+ */
+exports.listStatements = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Login required.");
+  }
+
+  try {
+    const statements = await listStatements(request.auth.uid);
+    return { data: statements };
+  } catch (err) {
+    console.error("[listStatements] Error:", err);
     throw new HttpsError("internal", err.message);
   }
 });
