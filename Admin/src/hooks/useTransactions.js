@@ -48,12 +48,12 @@ function validateFilters(filters) {
 }
 
 export function useTransactions(filters) {
-  const [data, setData]         = useState([]);
-  const [total, setTotal]       = useState(0);
+  const [data, setData]             = useState([]);
+  const [total, setTotal]           = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const [loading, setLoading]   = useState(false);
-  const [error, setError]       = useState(null);
-  const [warning, setWarning]   = useState(null);
+  const [loading, setLoading]       = useState(false);
+  const [error, setError]           = useState(null);
+  const [warning, setWarning]       = useState(null);
 
   // Abort previous request if filters change quickly
   const abortRef = useRef(false);
@@ -81,11 +81,12 @@ export function useTransactions(filters) {
         pageSize: filters.pageSize,
       };
 
-      if (filters.from)      params.from      = filters.from;
-      if (filters.to)        params.to        = filters.to;
-      if (filters.minAmount) params.minAmount = parseFloat(filters.minAmount);
-      if (filters.maxAmount) params.maxAmount = parseFloat(filters.maxAmount);
-      if (filters.search)    params.search    = filters.search;
+      if (filters.from)        params.from        = filters.from;
+      if (filters.to)          params.to          = filters.to;
+      if (filters.minAmount)   params.minAmount   = parseFloat(filters.minAmount);
+      if (filters.maxAmount)   params.maxAmount   = parseFloat(filters.maxAmount);
+      if (filters.search)      params.search      = filters.search;
+      if (filters.statementId) params.statementId = filters.statementId; // ← added
       if (filters.type && filters.type !== "all") {
         params.type = filters.type;
       }
