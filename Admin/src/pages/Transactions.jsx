@@ -2,6 +2,7 @@
  * Transactions.jsx
  *
  * Full transactions page:
+ * - Statement selector dropdown in header
  * - Filter bar (date, amount, type, search)
  * - Active filter chips with X to remove
  * - Reset filters button
@@ -18,6 +19,7 @@ import { useTransactions } from "../hooks/useTransactions";
 import FilterBar from "../components/FilterBar";
 import FilterChips from "../components/FilterChips";
 import TransactionTable from "../components/TransactionTable";
+import StatementSelector from "../components/StatementSelector";
 
 export default function Transactions() {
   const {
@@ -54,8 +56,8 @@ export default function Transactions() {
     <div className="min-h-screen bg-slate-950 text-slate-100 p-6 md:p-10">
       <div className="max-w-6xl mx-auto space-y-5">
 
-        {/* Header */}
-        <div className="flex items-start justify-between gap-4">
+        {/* Header — title + statement selector */}
+        <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <h1 className="text-2xl font-bold text-white">
               Transactions
@@ -64,6 +66,12 @@ export default function Transactions() {
               Filter, search, and browse your extracted transactions.
             </p>
           </div>
+
+          {/* Statement selector */}
+          <StatementSelector
+            value={filters.statementId}
+            onChange={(id) => setFilter("statementId", id || "")}
+          />
         </div>
 
         {/* Filter bar */}
