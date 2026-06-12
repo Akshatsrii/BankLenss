@@ -6,10 +6,17 @@
  * - Min / max amount
  * - Description search (debounced 300ms)
  * - Type dropdown (All / Debit / Credit)
+ * - Category dropdown (All / Salary / Food / Rent / ...)
  */
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Search, Calendar, DollarSign, ChevronDown } from "lucide-react";
+import { Search, Calendar, ChevronDown } from "lucide-react";
+
+const CATEGORIES = [
+  "all", "Salary", "Food", "Rent", "Utility",
+  "Shopping", "Transport", "ATM", "Investment",
+  "Health", "Transfer", "Other",
+];
 
 function InputWrapper({ label, children }) {
   return (
@@ -118,6 +125,29 @@ export default function FilterBar({ filters, onFilterChange, disabled }) {
               <option value="all">All Transactions</option>
               <option value="debit">Debit Only</option>
               <option value="credit">Credit Only</option>
+            </select>
+            <ChevronDown
+              size={14}
+              className="absolute right-3 top-1/2 -translate-y-1/2
+                         text-slate-500 pointer-events-none"
+            />
+          </div>
+        </InputWrapper>
+
+        {/* Category dropdown */}
+        <InputWrapper label="Category">
+          <div className="relative">
+            <select
+              value={filters.category}
+              onChange={(e) => onFilterChange("category", e.target.value)}
+              disabled={disabled}
+              className={`${inputClass} appearance-none pr-8 cursor-pointer`}
+            >
+              {CATEGORIES.map((c) => (
+                <option key={c} value={c}>
+                  {c === "all" ? "All Categories" : c}
+                </option>
+              ))}
             </select>
             <ChevronDown
               size={14}
