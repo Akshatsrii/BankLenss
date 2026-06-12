@@ -1,142 +1,90 @@
 /**
- * ICICI Statement Parser
+ * icici.js — hardened for real statement variations
  *
- * Column layout (standard ICICI account statement):
- * S No | Transaction Date | Value Date | Description | Ref No | Withdrawal | Deposit | Balance
- *
- * Date format: DD-MMM-YYYY (e.g. 15-Jan-2024)
- * or DD/MM/YYYY
+ * Known ICICI format variations handled:
+ * - Standard savings (S.No + 7 columns)
+ * - Without S.No (6 columns)
+ * - DD-MMM-YYYY and DD/MM/YYYY dates
+ * - Withdrawal/Deposit column names vary (sometimes Dr/Cr)
  */
 
-/**
- * Detects if the extracted text belongs to an ICICI statement
- * @param {string} text
- * @returns {boolean}
- */
 function detect(text) {
+  return text.includes("ICICI BANK") || text.includes("ICICI Bank");
+}
+
+const MONTHS = {
+  jan:"01",feb:"02",mar:"03",apr:"04",may:"05",jun:"06",
+  jul:"07",aug:"08",sep:"09",oct:"10",nov:"11",dec:"12",
+};
+
+function parseDate(s) {
+  const t = s.trim();
+  const m1 = t.match(/^(\d{2})-([A-Za-z]{3})-(\d{4})$/);
+  if (m1) return `${m1[3]}-${MONTHS[m1[2].toLowerCase()]||"01"}-${m1[1].padStart(2,"0")}`;
+  const m2 = t.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (m2) return `${m2[3]}-${m2[2].padStart(2,"0")}-${m2[1].padStart(2,"0")}`;
+  const m3 = t.match(/^(\d{2})\/(\d{2})\/(\d{2})$/);
+  if (m3) return `20${m3[3]}-${m3[2].padStart(2,"0")}-${m3[1].padStart(2,"0")}`;
+  return t;
+}
+
+function parseAmount(s) {
+  if (!s || s.trim() === "" || s.trim() === "-") return 0;
+  const n = parseFloat(s.replace(/,/g, "").replace(/₹|Rs\.?/gi, "").replace(/Dr\.?|Cr\.?/gi, "").trim());
+  return isNaN(n) ? 0 : n;
+}
+
+function isValidDate(s) {
+  return /\d{2}[-/]\w+[-/]\d{2,4}/.test(s.trim());
+}
+
+function isHeaderOrSummaryRow(row) {
+  const t = row.join(" ").toLowerCase();
   return (
-    text.includes("ICICI BANK") ||
-    text.includes("ICICI Bank") ||
-    text.includes("ICICI")
+    t.includes("opening balance") || t.includes("closing balance") ||
+    t.includes("total") || t.includes("page") || t.includes("brought forward")
   );
 }
 
-/**
- * Parses DD-MMM-YYYY or DD/MM/YYYY into YYYY-MM-DD
- * @param {string} dateStr
- * @returns {string}
- */
-function parseDate(dateStr) {
-  const trimmed = dateStr.trim();
-
-  // DD-MMM-YYYY e.g. 15-Jan-2024
-  const longMatch = trimmed.match(/^(\d{2})-([A-Za-z]{3})-(\d{4})$/);
-  if (longMatch) {
-    const months = {
-      jan: "01", feb: "02", mar: "03", apr: "04",
-      may: "05", jun: "06", jul: "07", aug: "08",
-      sep: "09", oct: "10", nov: "11", dec: "12",
-    };
-    const [, dd, mon, yyyy] = longMatch;
-    const mm = months[mon.toLowerCase()] || "01";
-    return `${yyyy}-${mm}-${dd.padStart(2, "0")}`;
-  }
-
-  // DD/MM/YYYY
-  const fullMatch = trimmed.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-  if (fullMatch) {
-    const [, dd, mm, yyyy] = fullMatch;
-    return `${yyyy}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}`;
-  }
-
-  return trimmed;
-}
-
-/**
- * Cleans amount string → number
- * @param {string} str
- * @returns {number}
- */
-function parseAmount(str) {
-  if (!str || str.trim() === "" || str.trim() === "-") return 0;
-  const cleaned = str.replace(/,/g, "").trim();
-  const num = parseFloat(cleaned);
-  return isNaN(num) ? 0 : num;
-}
-
-/**
- * Main ICICI parser
- * @param {string[][]} rows
- * @returns {object[]} transactions
- */
 function parse(rows) {
   const transactions = [];
 
-  const headerKeywords = ["date", "description", "withdrawal", "deposit", "balance"];
-
-  let dataStartIndex = -1;
-
+  let start = -1;
   for (let i = 0; i < rows.length; i++) {
-    const rowText = rows[i].join(" ").toLowerCase();
-    const matchCount = headerKeywords.filter((k) => rowText.includes(k)).length;
-    if (matchCount >= 3) {
-      dataStartIndex = i + 1;
-      break;
-    }
+    const t = rows[i].join(" ").toLowerCase();
+    const hits = ["date", "description", "particulars", "withdrawal", "deposit", "debit", "credit", "balance"]
+      .filter((k) => t.includes(k)).length;
+    if (hits >= 3) { start = i + 1; break; }
   }
+  if (start === -1) start = 0;
 
-  if (dataStartIndex === -1) {
-    console.warn("[ICICI] Could not find header row, attempting full parse");
-    dataStartIndex = 0;
-  }
-
-  for (let i = dataStartIndex; i < rows.length; i++) {
+  for (let i = start; i < rows.length; i++) {
     const row = rows[i];
+    if (!row || row.length < 5) continue;
+    if (isHeaderOrSummaryRow(row)) continue;
 
-    if (row.length < 6) continue;
+    const hasSerial = /^\d+$/.test(row[0]?.trim() || "");
+    const offset    = hasSerial ? 1 : 0;
 
-    // ICICI: S.No | Transaction Date | Value Date | Description | Ref No | Withdrawal | Deposit | Balance
-    // Some exports skip S.No, so check both layouts
+    const dateStr     = row[offset]?.trim() || "";
+    const description = row[offset + 2]?.trim() || row[offset + 1]?.trim() || "";
+    const debit       = parseAmount(row[offset + 4]);
+    const credit      = parseAmount(row[offset + 5]);
+    const balance     = parseAmount(row[offset + 6]) || parseAmount(row[offset + 5]);
 
-    let dateStr, description, withdrawalStr, depositStr, balanceStr;
-
-    // Detect if first column is a serial number (pure integer)
-    const firstCol = row[0] ? row[0].trim() : "";
-    const hasSerialNo = /^\d+$/.test(firstCol);
-
-    if (hasSerialNo) {
-      dateStr = row[1] ? row[1].trim() : "";
-      description = row[3] ? row[3].trim() : "";
-      withdrawalStr = row[5] ? row[5].trim() : "";
-      depositStr = row[6] ? row[6].trim() : "";
-      balanceStr = row[7] ? row[7].trim() : "";
-    } else {
-      dateStr = row[0] ? row[0].trim() : "";
-      description = row[2] ? row[2].trim() : "";
-      withdrawalStr = row[4] ? row[4].trim() : "";
-      depositStr = row[5] ? row[5].trim() : "";
-      balanceStr = row[6] ? row[6].trim() : "";
-    }
-
-    // Validate date
-    if (!/\d{2}[-/]\w+[-/]\d{2,4}/.test(dateStr)) continue;
-
-    const debit = parseAmount(withdrawalStr);
-    const credit = parseAmount(depositStr);
-    const balance = parseAmount(balanceStr);
-
+    if (!isValidDate(dateStr)) continue;
+    if (!description) continue;
     if (debit === 0 && credit === 0) continue;
 
-    const type = credit > 0 ? "credit" : "debit";
+    // Some ICICI statements have Dr/Cr on the amount cell itself
+    const rawDebitCell  = row[offset + 4] || "";
+    const rawCreditCell = row[offset + 5] || "";
+    let type;
+    if (/Cr/i.test(rawCreditCell) || credit > 0) type = "credit";
+    else if (/Dr/i.test(rawDebitCell) || debit > 0) type = "debit";
+    else type = "debit";
 
-    transactions.push({
-      date: parseDate(dateStr),
-      description,
-      debit,
-      credit,
-      balance,
-      type,
-    });
+    transactions.push({ date: parseDate(dateStr), description, debit, credit, balance, type });
   }
 
   return transactions;
