@@ -5,7 +5,7 @@
  * Refresh preserves state. Links are shareable.
  *
  * Params managed:
- *   from, to, minAmount, maxAmount, type, search, page, pageSize, statementId
+ *   from, to, minAmount, maxAmount, type, category, search, page, pageSize, statementId
  */
 
 import { useCallback, useMemo } from "react";
@@ -17,10 +17,11 @@ const DEFAULTS = {
   minAmount:   "",
   maxAmount:   "",
   type:        "all",
+  category:    "all",   // ← added
   search:      "",
   page:        1,
   pageSize:    20,
-  statementId: "",   // ← added
+  statementId: "",
 };
 
 export function useFilterParams() {
@@ -33,10 +34,11 @@ export function useFilterParams() {
     minAmount:   searchParams.get("minAmount")   || DEFAULTS.minAmount,
     maxAmount:   searchParams.get("maxAmount")   || DEFAULTS.maxAmount,
     type:        searchParams.get("type")        || DEFAULTS.type,
+    category:    searchParams.get("category")    || DEFAULTS.category,   // ← added
     search:      searchParams.get("search")      || DEFAULTS.search,
     page:        parseInt(searchParams.get("page"))     || DEFAULTS.page,
     pageSize:    parseInt(searchParams.get("pageSize")) || DEFAULTS.pageSize,
-    statementId: searchParams.get("statementId") || DEFAULTS.statementId,  // ← added
+    statementId: searchParams.get("statementId") || DEFAULTS.statementId,
   }), [searchParams]);
 
   /**
@@ -94,8 +96,9 @@ export function useFilterParams() {
       filters.minAmount   !== DEFAULTS.minAmount   ||
       filters.maxAmount   !== DEFAULTS.maxAmount   ||
       filters.type        !== DEFAULTS.type        ||
+      filters.category    !== DEFAULTS.category    ||   // ← added
       filters.search      !== DEFAULTS.search      ||
-      filters.statementId !== DEFAULTS.statementId  // ← added
+      filters.statementId !== DEFAULTS.statementId
     );
   }, [filters]);
 
@@ -116,10 +119,12 @@ export function useFilterParams() {
       chips.push({ key: "maxAmount",   label: "Max ₹",     value: filters.maxAmount });
     if (filters.type && filters.type !== "all")
       chips.push({ key: "type",        label: "Type",      value: filters.type });
+    if (filters.category && filters.category !== "all")
+      chips.push({ key: "category",    label: "Category",  value: filters.category }); // ← added
     if (filters.search)
       chips.push({ key: "search",      label: "Search",    value: filters.search });
     if (filters.statementId)
-      chips.push({ key: "statementId", label: "Statement", value: filters.statementId }); // ← added
+      chips.push({ key: "statementId", label: "Statement", value: filters.statementId });
 
     return chips;
   }, [filters]);
