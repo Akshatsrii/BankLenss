@@ -1,132 +1,108 @@
 /**
- * HDFC Statement Parser
+ * hdfc.js — hardened for real statement variations
  *
- * Column layout (standard HDFC account statement):
- * Date | Narration | Chq/Ref No | Value Date | Withdrawal | Deposit | Closing Balance
- *
- * Date format: DD/MM/YY or DD-MMM-YYYY (e.g. 01-Jan-2024)
+ * Known HDFC format variations handled:
+ * - Standard savings (7-column with Value Date)
+ * - Credit card statement (different column order)
+ * - DD-MMM-YYYY and DD/MM/YY date formats
+ * - Amount with commas e.g. 1,00,000.00
+ * - Blank withdrawal or deposit cell
  */
 
-/**
- * Detects if the extracted text belongs to an HDFC statement
- * @param {string} text
- * @returns {boolean}
- */
 function detect(text) {
   return (
     text.includes("HDFC BANK") ||
     text.includes("HDFC Bank") ||
-    text.includes("HDFC")
+    text.includes("HDB Financial")
   );
 }
 
-/**
- * Parses DD-MMM-YYYY or DD/MM/YY into YYYY-MM-DD
- * @param {string} dateStr
- * @returns {string}
- */
-function parseDate(dateStr) {
-  const trimmed = dateStr.trim();
+const MONTHS = {
+  jan:"01",feb:"02",mar:"03",apr:"04",may:"05",jun:"06",
+  jul:"07",aug:"08",sep:"09",oct:"10",nov:"11",dec:"12",
+};
 
-  // DD-MMM-YYYY e.g. 01-Jan-2024
-  const longMatch = trimmed.match(/^(\d{2})-([A-Za-z]{3})-(\d{4})$/);
-  if (longMatch) {
-    const months = {
-      jan: "01", feb: "02", mar: "03", apr: "04",
-      may: "05", jun: "06", jul: "07", aug: "08",
-      sep: "09", oct: "10", nov: "11", dec: "12",
-    };
-    const [, dd, mon, yyyy] = longMatch;
-    const mm = months[mon.toLowerCase()] || "01";
-    return `${yyyy}-${mm}-${dd.padStart(2, "0")}`;
-  }
-
-  // DD/MM/YY e.g. 01/01/24
-  const shortMatch = trimmed.match(/^(\d{2})\/(\d{2})\/(\d{2})$/);
-  if (shortMatch) {
-    const [, dd, mm, yy] = shortMatch;
-    const yyyy = `20${yy}`;
-    return `${yyyy}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}`;
-  }
-
+function parseDate(s) {
+  const t = s.trim();
+  // DD-MMM-YYYY
+  const m1 = t.match(/^(\d{2})-([A-Za-z]{3})-(\d{4})$/);
+  if (m1) return `${m1[3]}-${MONTHS[m1[2].toLowerCase()]||"01"}-${m1[1].padStart(2,"0")}`;
+  // DD/MM/YY
+  const m2 = t.match(/^(\d{2})\/(\d{2})\/(\d{2})$/);
+  if (m2) return `20${m2[3]}-${m2[2].padStart(2,"0")}-${m2[1].padStart(2,"0")}`;
   // DD/MM/YYYY
-  const fullMatch = trimmed.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-  if (fullMatch) {
-    const [, dd, mm, yyyy] = fullMatch;
-    return `${yyyy}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}`;
-  }
-
-  return trimmed;
+  const m3 = t.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (m3) return `${m3[3]}-${m3[2].padStart(2,"0")}-${m3[1].padStart(2,"0")}`;
+  // DD-MM-YYYY
+  const m4 = t.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+  if (m4) return `${m4[3]}-${m4[2].padStart(2,"0")}-${m4[1].padStart(2,"0")}`;
+  return t;
 }
 
-/**
- * Cleans amount string → number
- * @param {string} str
- * @returns {number}
- */
-function parseAmount(str) {
-  if (!str || str.trim() === "" || str.trim() === "-") return 0;
-  const cleaned = str.replace(/,/g, "").trim();
-  const num = parseFloat(cleaned);
-  return isNaN(num) ? 0 : num;
+function parseAmount(s) {
+  if (!s || s.trim() === "" || s.trim() === "-") return 0;
+  const n = parseFloat(s.replace(/,/g, "").replace(/₹|Rs\.?/gi, "").trim());
+  return isNaN(n) ? 0 : n;
 }
 
-/**
- * Main HDFC parser
- * @param {string[][]} rows
- * @returns {object[]} transactions
- */
+function isValidDate(s) {
+  return /\d{2}[-/]\w+[-/]\d{2,4}/.test(s.trim());
+}
+
+function isHeaderOrSummaryRow(row) {
+  const t = row.join(" ").toLowerCase();
+  return (
+    t.includes("opening balance") || t.includes("closing balance") ||
+    t.includes("total") || t.includes("brought forward") || t.includes("page")
+  );
+}
+
 function parse(rows) {
   const transactions = [];
 
-  const headerKeywords = ["date", "narration", "withdrawal", "deposit", "balance"];
-
-  let dataStartIndex = -1;
-
+  let start = -1;
   for (let i = 0; i < rows.length; i++) {
-    const rowText = rows[i].join(" ").toLowerCase();
-    const matchCount = headerKeywords.filter((k) => rowText.includes(k)).length;
-    if (matchCount >= 3) {
-      dataStartIndex = i + 1;
-      break;
-    }
+    const t = rows[i].join(" ").toLowerCase();
+    const hits = ["date", "narration", "withdrawal", "deposit", "balance"]
+      .filter((k) => t.includes(k)).length;
+    if (hits >= 3) { start = i + 1; break; }
   }
+  if (start === -1) start = 0;
 
-  if (dataStartIndex === -1) {
-    console.warn("[HDFC] Could not find header row, attempting full parse");
-    dataStartIndex = 0;
-  }
-
-  for (let i = dataStartIndex; i < rows.length; i++) {
+  for (let i = start; i < rows.length; i++) {
     const row = rows[i];
+    if (!row || row.length < 5) continue;
+    if (isHeaderOrSummaryRow(row)) continue;
 
-    if (row.length < 5) continue;
+    const dateStr = row[0]?.trim() || "";
+    if (!isValidDate(dateStr)) continue;
 
-    // HDFC: Date | Narration | Chq/Ref No | Value Date | Withdrawal | Deposit | Closing Balance
-    const dateStr = row[0] ? row[0].trim() : "";
-    const description = row[1] ? row[1].trim() : "";
-    const withdrawalStr = row[4] ? row[4].trim() : "";
-    const depositStr = row[5] ? row[5].trim() : "";
-    const balanceStr = row[6] ? row[6].trim() : "";
+    const description = row[1]?.trim() || "";
+    if (!description) continue;
 
-    // Validate date — must contain digits and separators
-    if (!/\d{2}[-/]\w+[-/]\d{2,4}/.test(dateStr)) continue;
-
-    const debit = parseAmount(withdrawalStr);
-    const credit = parseAmount(depositStr);
-    const balance = parseAmount(balanceStr);
+    let debit, credit, balance;
+    if (row.length >= 7) {
+      // Standard 7-col: Date|Narration|Chq/Ref|ValueDate|Withdrawal|Deposit|Balance
+      debit   = parseAmount(row[4]);
+      credit  = parseAmount(row[5]);
+      balance = parseAmount(row[6]);
+    } else if (row.length === 6) {
+      // 6-col: Date|Narration|Chq/Ref|Withdrawal|Deposit|Balance
+      debit   = parseAmount(row[3]);
+      credit  = parseAmount(row[4]);
+      balance = parseAmount(row[5]);
+    } else {
+      // 5-col fallback
+      debit   = parseAmount(row[2]);
+      credit  = parseAmount(row[3]);
+      balance = parseAmount(row[4]);
+    }
 
     if (debit === 0 && credit === 0) continue;
 
-    const type = credit > 0 ? "credit" : "debit";
-
     transactions.push({
-      date: parseDate(dateStr),
-      description,
-      debit,
-      credit,
-      balance,
-      type,
+      date: parseDate(dateStr), description, debit, credit, balance,
+      type: credit > 0 ? "credit" : "debit",
     });
   }
 
