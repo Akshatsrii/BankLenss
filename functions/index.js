@@ -1,155 +1,118 @@
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
-const { initializeApp } = require("firebase-admin/app");
-const { getStorage } = require("firebase-admin/storage");
+const { initializeApp }      = require("firebase-admin/app");
+const { getStorage }         = require("firebase-admin/storage");
 
-const { parseStatement, ERRORS } = require("./parsers/index");
-const { writeStatement } = require("./firestore/writeStatement");
-const { writeTransactions } = require("./firestore/writeTransactions");
-const { listTransactions } = require("./firestore/listTransactions");
-const { listStatements } = require("./firestore/listStatements");
+const { parseStatement, ERRORS }   = require("./parsers/index");
+const { writeStatement }           = require("./firestore/writeStatement");
+const { writeTransactions }        = require("./firestore/writeTransactions");
+const { listTransactions }         = require("./firestore/listTransactions");
+const { listStatements }           = require("./firestore/listStatements");
+const {
+  logProcessSuccess,
+  logProcessError,
+  logListTransactions,
+  logScannedWarning,
+} = require("./utils/logger");
 
 initializeApp();
 
 // ─── helloWorld ───────────────────────────────────────────────
-exports.helloWorld = onCall(async () => {
-  return {
-    message: "Hello from Firebase Functions!",
-    timestamp: new Date().toISOString(),
-  };
-});
+exports.helloWorld = onCall(async () => ({
+  message:   "Hello from Firebase Functions!",
+  timestamp: new Date().toISOString(),
+}));
 
 // ─── processStatement ─────────────────────────────────────────
-/**
- * Callable: processStatement
- *
- * Input:  { storagePath, password, fileName }
- * Output: { statementId, bank, transactionCount }
- *
- * Flow:
- * 1. Read PDF from Firebase Storage
- * 2. Parse it (unlock → detect → extract)
- * 3. Write statement doc
- * 4. Batch-write transactions
- */
 exports.processStatement = onCall(async (request) => {
-  // Auth check
   if (!request.auth) {
-    throw new HttpsError(
-      "unauthenticated",
-      "You must be logged in to process statements."
-    );
+    throw new HttpsError("unauthenticated", "You must be logged in.");
   }
 
-  const userId = request.auth.uid;
+  const userId                       = request.auth.uid;
   const { storagePath, password, fileName } = request.data;
+  const uploadId = `${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
+  const startTime = Date.now();
 
   if (!storagePath) {
-    throw new HttpsError(
-      "invalid-argument",
-      "storagePath is required."
-    );
+    throw new HttpsError("invalid-argument", "storagePath is required.");
   }
 
-  // Step 1: Read PDF buffer from Firebase Storage
+  // Step 1: Download PDF from Storage
   let buffer;
   try {
-    const bucket = getStorage().bucket();
-    const file = bucket.file(storagePath);
-    const [bytes] = await file.download();
+    const bucket     = getStorage().bucket();
+    const [bytes]    = await bucket.file(storagePath).download();
     buffer = bytes;
-    console.log(
-      `[processStatement] Downloaded ${buffer.length} bytes from ${storagePath}`
-    );
+    console.log(`[processStatement] uploadId=${uploadId} Downloaded ${buffer.length} bytes`);
   } catch (err) {
-    console.error("[processStatement] Storage download failed:", err);
-    throw new HttpsError(
-      "not-found",
-      "Could not find the uploaded PDF in storage."
-    );
+    logProcessError({ uploadId, userId, errorType: "STORAGE_DOWNLOAD", errorMessage: err.message, fileName, durationMs: Date.now() - startTime });
+    throw new HttpsError("not-found", "Could not find the uploaded PDF in storage.");
   }
 
-  // Step 2: Parse PDF
+  // Step 2: Parse
   let parseResult;
   try {
     parseResult = await parseStatement(buffer, password || "");
   } catch (err) {
-    console.error("[processStatement] Parse failed:", err.code, err.message);
+    logProcessError({ uploadId, userId, errorType: err.code || "PARSE_FAILED", errorMessage: err.message, fileName, durationMs: Date.now() - startTime });
 
-    if (err.code === ERRORS.WRONG_PASSWORD) {
-      throw new HttpsError("invalid-argument", err.message);
-    }
-    if (err.code === ERRORS.CORRUPT_PDF) {
-      throw new HttpsError("invalid-argument", err.message);
-    }
-    if (err.code === ERRORS.UNSUPPORTED_BANK) {
-      throw new HttpsError("unimplemented", err.message);
-    }
+    if (err.code === ERRORS.WRONG_PASSWORD)   throw new HttpsError("invalid-argument", err.message);
+    if (err.code === ERRORS.CORRUPT_PDF)      throw new HttpsError("invalid-argument", err.message);
+    if (err.code === ERRORS.UNSUPPORTED_BANK) throw new HttpsError("unimplemented",    err.message);
+    if (err.code === ERRORS.SCANNED_PDF)      throw new HttpsError("invalid-argument", err.message);
     throw new HttpsError("internal", err.message);
   }
 
-  const { bank, transactions } = parseResult;
+  const { bank, transactions, warnings } = parseResult;
+
+  // Log scanned warning if partial
+  const scannedWarning = warnings.find((w) => w.type === "SCANNED_PDF");
+  if (scannedWarning) {
+    logScannedWarning({ uploadId, userId, scannedPages: scannedWarning.scannedPages });
+  }
 
   // Step 3: Write statement doc
   const statementId = await writeStatement({
-    userId,
-    bankName: bank,
+    userId, bankName: bank,
     fileName: fileName || storagePath.split("/").pop(),
-    storagePath,
-    transactionCount: transactions.length,
+    storagePath, transactionCount: transactions.length,
   });
 
   // Step 4: Batch-write transactions
-  const { written } = await writeTransactions({
-    userId,
-    statementId,
-    transactions,
+  const { written } = await writeTransactions({ userId, statementId, transactions });
+
+  logProcessSuccess({
+    uploadId, userId, bank, txCount: written, fileName,
+    durationMs: Date.now() - startTime,
+    scannedPages: scannedWarning?.scannedPages,
   });
 
   return {
     statementId,
     bank,
     transactionCount: written,
+    warnings: warnings.map((w) => w.message),
   };
 });
 
 // ─── listTransactions ─────────────────────────────────────────
-/**
- * Callable: listTransactions
- *
- * Input:  { from, to, minAmount, maxAmount, type, search, page, pageSize }
- * Output: { data, total, page, pageSize, totalPages }
- */
 exports.listTransactions = onCall(async (request) => {
   if (!request.auth) {
-    throw new HttpsError(
-      "unauthenticated",
-      "You must be logged in to view transactions."
-    );
+    throw new HttpsError("unauthenticated", "You must be logged in.");
   }
 
-  const userId = request.auth.uid;
-  const {
-    from,
-    to,
-    minAmount,
-    maxAmount,
-    type,
-    search,
-    page,
-    pageSize,
-  } = request.data;
+  const userId    = request.auth.uid;
+  const startTime = Date.now();
+  const filters   = request.data;
 
   try {
-    const result = await listTransactions({
+    const result = await listTransactions({ userId, ...filters });
+
+    logListTransactions({
       userId,
-      from,
-      to,
-      minAmount,
-      maxAmount,
-      type,
-      search,
-      page,
-      pageSize,
+      filters: { from: filters.from, to: filters.to, type: filters.type, search: filters.search, statementId: filters.statementId },
+      resultCount: result.total,
+      durationMs: Date.now() - startTime,
     });
 
     return result;
@@ -160,17 +123,10 @@ exports.listTransactions = onCall(async (request) => {
 });
 
 // ─── listStatements ───────────────────────────────────────────
-/**
- * Callable: listStatements
- *
- * Input:  none (userId taken from auth context)
- * Output: { data: statement[] }
- */
 exports.listStatements = onCall(async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "Login required.");
   }
-
   try {
     const statements = await listStatements(request.auth.uid);
     return { data: statements };
