@@ -12,6 +12,7 @@
  *   minAmount   : number   (optional — min of debit or credit)
  *   maxAmount   : number   (optional — max of debit or credit)
  *   type        : string   (optional — "debit" | "credit")
+ *   category    : string   (optional — category filter)
  *   search      : string   (optional — description substring match)
  *   page        : number   (default 1)
  *   pageSize    : number   (default 20, max 100)
@@ -38,40 +39,41 @@ const DEFAULT_PAGE_SIZE = 20;
  */
 async function listTransactions({
   userId,
-  statementId,                    // ← added
+  statementId,
   from,
   to,
   minAmount,
   maxAmount,
   type,
+  category,
   search,
   page = 1,
   pageSize = DEFAULT_PAGE_SIZE,
 }) {
   const db = getFirestore();
 
-  // Clamp pageSize
   const size = Math.min(
     Math.max(1, parseInt(pageSize) || DEFAULT_PAGE_SIZE),
     MAX_PAGE_SIZE
   );
+
   const currentPage = Math.max(1, parseInt(page) || 1);
 
-  // Base query — always filter by userId
+  // Base query
   let query = db
     .collection("transactions")
     .where("userId", "==", userId);
 
-  // Statement filter — narrow to a single uploaded statement
+  // Statement filter
   if (statementId) {
-    query = query.where("statementId", "==", statementId); // ← added
+    query = query.where("statementId", "==", statementId);
   }
 
-  // Date range filter
-  // Uses string comparison — works because dates are YYYY-MM-DD
+  // Date filters
   if (from) {
     query = query.where("date", ">=", from);
   }
+
   if (to) {
     query = query.where("date", "<=", to);
   }
@@ -81,21 +83,17 @@ async function listTransactions({
     query = query.where("type", "==", type);
   }
 
-  // Order by date descending
+  // Sort newest first
   query = query.orderBy("date", "desc");
 
-  // Fetch all matching docs for this filter combination
-  // (Firestore doesn't support server-side pagination with total count
-  //  in a single query, so we fetch filtered set and paginate in memory)
   const snapshot = await query.get();
 
   let results = snapshot.docs.map((doc) => doc.data());
 
-  // --- In-memory filters (Firestore can't do these server-side) ---
-
-  // Amount filter (checks both debit and credit columns)
+  // Amount filters
   if (minAmount !== undefined && minAmount !== null && minAmount !== "") {
     const min = parseFloat(minAmount);
+
     if (!isNaN(min)) {
       results = results.filter(
         (t) => t.debit >= min || t.credit >= min
@@ -105,6 +103,7 @@ async function listTransactions({
 
   if (maxAmount !== undefined && maxAmount !== null && maxAmount !== "") {
     const max = parseFloat(maxAmount);
+
     if (!isNaN(max)) {
       results = results.filter(
         (t) =>
@@ -114,26 +113,34 @@ async function listTransactions({
     }
   }
 
-  // Search filter — case-insensitive substring on description
+  // Search filter
   if (search && search.trim() !== "") {
     const term = search.trim().toLowerCase();
+
     results = results.filter((t) =>
-      t.description.toLowerCase().includes(term)
+      (t.description || "")
+        .toLowerCase()
+        .includes(term)
     );
   }
 
-  // Total after all filters
+  // Category filter (in-memory — stored on transaction doc)
+  if (category && category !== "all") {
+    results = results.filter(
+      (t) => t.category === category
+    );
+  }
+
   const total = results.length;
   const totalPages = Math.ceil(total / size);
 
-  // Paginate
   const offset = (currentPage - 1) * size;
   const paginated = results.slice(offset, offset + size);
 
   console.log(
     `[listTransactions] user: ${userId} | ` +
     `statementId: ${statementId || "all"} | ` +
-    `filters: from=${from} to=${to} type=${type} search=${search} | ` +
+    `filters: from=${from} to=${to} type=${type} category=${category || "all"} search=${search} | ` +
     `total: ${total} | page: ${currentPage}/${totalPages}`
   );
 

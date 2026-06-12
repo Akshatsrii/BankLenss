@@ -33,11 +33,7 @@ function validateFilters(filters) {
     };
   }
 
-  if (
-    filters.from &&
-    filters.to &&
-    filters.from > filters.to
-  ) {
+  if (filters.from && filters.to && filters.from > filters.to) {
     return {
       valid: false,
       warning: "Start date cannot be after end date.",
@@ -48,18 +44,18 @@ function validateFilters(filters) {
 }
 
 export function useTransactions(filters) {
-  const [data, setData]             = useState([]);
-  const [total, setTotal]           = useState(0);
+  const [data, setData] = useState([]);
+  const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const [loading, setLoading]       = useState(false);
-  const [error, setError]           = useState(null);
-  const [warning, setWarning]       = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [warning, setWarning] = useState(null);
 
   // Abort previous request if filters change quickly
   const abortRef = useRef(false);
 
   const fetchTransactions = useCallback(async () => {
-    // Validate first
+    // Validate filters before making request
     const { valid, warning: warn } = validateFilters(filters);
     setWarning(warn);
 
@@ -77,43 +73,82 @@ export function useTransactions(filters) {
     try {
       // Build params — omit empty/default values
       const params = {
-        page:     filters.page,
+        page: filters.page,
         pageSize: filters.pageSize,
       };
 
-      if (filters.from)        params.from        = filters.from;
-      if (filters.to)          params.to          = filters.to;
-      if (filters.minAmount)   params.minAmount   = parseFloat(filters.minAmount);
-      if (filters.maxAmount)   params.maxAmount   = parseFloat(filters.maxAmount);
-      if (filters.search)      params.search      = filters.search;
-      if (filters.statementId) params.statementId = filters.statementId; // ← added
+      if (filters.from) {
+        params.from = filters.from;
+      }
+
+      if (filters.to) {
+        params.to = filters.to;
+      }
+
+      if (filters.minAmount) {
+        params.minAmount = parseFloat(filters.minAmount);
+      }
+
+      if (filters.maxAmount) {
+        params.maxAmount = parseFloat(filters.maxAmount);
+      }
+
+      if (filters.search) {
+        params.search = filters.search;
+      }
+
+      if (filters.statementId) {
+        params.statementId = filters.statementId;
+      }
+
       if (filters.type && filters.type !== "all") {
         params.type = filters.type;
       }
 
+      if (filters.category && filters.category !== "all") {
+        params.category = filters.category;
+      }
+
       const response = await listTransactionsFn(params);
 
-      if (abortRef.current) return; // stale response
+      if (abortRef.current) return;
 
       const result = response.data;
+
       setData(result.data || []);
       setTotal(result.total || 0);
       setTotalPages(result.totalPages || 0);
-
     } catch (err) {
       if (abortRef.current) return;
+
       console.error("[useTransactions] Error:", err);
+
       setError(err.message || "Failed to load transactions.");
       setData([]);
+      setTotal(0);
+      setTotalPages(0);
     } finally {
-      if (!abortRef.current) setLoading(false);
+      if (!abortRef.current) {
+        setLoading(false);
+      }
     }
   }, [filters]);
 
   useEffect(() => {
     fetchTransactions();
-    return () => { abortRef.current = true; };
+
+    return () => {
+      abortRef.current = true;
+    };
   }, [fetchTransactions]);
 
-  return { data, total, totalPages, loading, error, warning, refetch: fetchTransactions };
+  return {
+    data,
+    total,
+    totalPages,
+    loading,
+    error,
+    warning,
+    refetch: fetchTransactions,
+  };
 }
