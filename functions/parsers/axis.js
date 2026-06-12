@@ -1,16 +1,13 @@
 /**
- * Axis Bank Statement Parser
+ * axis.js — hardened for real statement variations
  *
- * Column layout (standard Axis account statement):
- * Tran Date | Chq No | Particulars | Debit | Credit | Balance
- *
- * Date format: DD-MM-YYYY or DD/MM/YYYY
+ * Known Axis format variations handled:
+ * - Standard savings (6-column)
+ * - DD-MM-YYYY and DD/MM/YYYY dates
+ * - Amount with Dr/Cr suffix
+ * - Summary/header rows filtered
  */
 
-/**
- * @param {string} text
- * @returns {boolean}
- */
 function detect(text) {
   return (
     text.includes("Axis Bank") ||
@@ -19,89 +16,76 @@ function detect(text) {
   );
 }
 
-/**
- * DD-MM-YYYY or DD/MM/YYYY → YYYY-MM-DD
- * @param {string} dateStr
- * @returns {string}
- */
-function parseDate(dateStr) {
-  const trimmed = dateStr.trim();
-
-  const match = trimmed.match(/^(\d{2})[-/](\d{2})[-/](\d{4})$/);
-  if (match) {
-    const [, dd, mm, yyyy] = match;
-    return `${yyyy}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}`;
-  }
-
-  return trimmed;
+function parseDate(s) {
+  const t = s.trim();
+  const m1 = t.match(/^(\d{2})[-/](\d{2})[-/](\d{4})$/);
+  if (m1) return `${m1[3]}-${m1[2].padStart(2,"0")}-${m1[1].padStart(2,"0")}`;
+  // DD-MMM-YYYY
+  const MONTHS = {jan:"01",feb:"02",mar:"03",apr:"04",may:"05",jun:"06",jul:"07",aug:"08",sep:"09",oct:"10",nov:"11",dec:"12"};
+  const m2 = t.match(/^(\d{2})-([A-Za-z]{3})-(\d{4})$/);
+  if (m2) return `${m2[3]}-${MONTHS[m2[2].toLowerCase()]||"01"}-${m2[1].padStart(2,"0")}`;
+  return t;
 }
 
-/**
- * @param {string} str
- * @returns {number}
- */
-function parseAmount(str) {
-  if (!str || str.trim() === "" || str.trim() === "-") return 0;
-  const cleaned = str.replace(/,/g, "").trim();
-  const num = parseFloat(cleaned);
-  return isNaN(num) ? 0 : num;
+function parseAmount(s) {
+  if (!s || s.trim() === "" || s.trim() === "-") return 0;
+  const n = parseFloat(
+    s.replace(/,/g, "").replace(/Dr\.?|Cr\.?/gi, "").replace(/₹|Rs\.?/gi, "").trim()
+  );
+  return isNaN(n) ? 0 : n;
 }
 
-/**
- * @param {string[][]} rows
- * @returns {object[]}
- */
+function isValidDate(s) {
+  return /^\d{2}[-/]\d{2}[-/]\d{4}$/.test(s.trim()) ||
+         /^\d{2}-[A-Za-z]{3}-\d{4}$/.test(s.trim());
+}
+
+function isHeaderOrSummaryRow(row) {
+  const t = row.join(" ").toLowerCase();
+  return (
+    t.includes("opening balance") || t.includes("closing balance") ||
+    t.includes("total") || t.includes("page") || t.includes("brought forward")
+  );
+}
+
 function parse(rows) {
   const transactions = [];
 
-  const headerKeywords = ["tran", "date", "particulars", "debit", "credit", "balance"];
-
-  let dataStartIndex = -1;
-
+  let start = -1;
   for (let i = 0; i < rows.length; i++) {
-    const rowText = rows[i].join(" ").toLowerCase();
-    const matchCount = headerKeywords.filter((k) => rowText.includes(k)).length;
-    if (matchCount >= 3) {
-      dataStartIndex = i + 1;
-      break;
-    }
+    const t = rows[i].join(" ").toLowerCase();
+    const hits = ["tran", "date", "particulars", "debit", "credit", "balance", "withdrawal", "deposit"]
+      .filter((k) => t.includes(k)).length;
+    if (hits >= 3) { start = i + 1; break; }
   }
+  if (start === -1) start = 0;
 
-  if (dataStartIndex === -1) {
-    console.warn("[AXIS] Could not find header row, attempting full parse");
-    dataStartIndex = 0;
-  }
-
-  for (let i = dataStartIndex; i < rows.length; i++) {
+  for (let i = start; i < rows.length; i++) {
     const row = rows[i];
+    if (!row || row.length < 4) continue;
+    if (isHeaderOrSummaryRow(row)) continue;
 
-    if (row.length < 4) continue;
+    const dateStr = row[0]?.trim() || "";
+    if (!isValidDate(dateStr)) continue;
 
-    // Axis: Tran Date | Chq No | Particulars | Debit | Credit | Balance
-    const dateStr = row[0] ? row[0].trim() : "";
-    const description = row[2] ? row[2].trim() : "";
-    const debitStr = row[3] ? row[3].trim() : "";
-    const creditStr = row[4] ? row[4].trim() : "";
-    const balanceStr = row[5] ? row[5].trim() : "";
+    const description = row[2]?.trim() || row[1]?.trim() || "";
+    if (!description) continue;
 
-    if (!/^\d{2}[-/]\d{2}[-/]\d{4}$/.test(dateStr)) continue;
-
-    const debit = parseAmount(debitStr);
-    const credit = parseAmount(creditStr);
-    const balance = parseAmount(balanceStr);
+    const debit   = parseAmount(row[3]);
+    const credit  = parseAmount(row[4]);
+    const balance = parseAmount(row[5]);
 
     if (debit === 0 && credit === 0) continue;
 
-    const type = credit > 0 ? "credit" : "debit";
+    // Axis sometimes puts Dr/Cr on the amount cell
+    const rawDebit  = row[3] || "";
+    const rawCredit = row[4] || "";
+    let type;
+    if (/Cr/i.test(rawCredit) || credit > 0) type = "credit";
+    else if (/Dr/i.test(rawDebit) || debit > 0) type = "debit";
+    else type = "debit";
 
-    transactions.push({
-      date: parseDate(dateStr),
-      description,
-      debit,
-      credit,
-      balance,
-      type,
-    });
+    transactions.push({ date: parseDate(dateStr), description, debit, credit, balance, type });
   }
 
   return transactions;
