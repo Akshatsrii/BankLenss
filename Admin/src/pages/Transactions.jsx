@@ -2,8 +2,8 @@
  * Transactions.jsx
  *
  * Full transactions page:
- * - Statement selector dropdown in header
- * - Filter bar (date, amount, type, search)
+ * - Statement selector dropdown + Export button in header
+ * - Filter bar (date, amount, type, category, search)
  * - Active filter chips with X to remove
  * - Reset filters button
  * - URL sync (filters preserved on refresh, shareable links)
@@ -14,12 +14,13 @@
 import { useCallback } from "react";
 import { AlertTriangle } from "lucide-react";
 
-import { useFilterParams } from "../hooks/useFilterParams";
-import { useTransactions } from "../hooks/useTransactions";
-import FilterBar from "../components/FilterBar";
-import FilterChips from "../components/FilterChips";
-import TransactionTable from "../components/TransactionTable";
-import StatementSelector from "../components/StatementSelector";
+import { useFilterParams }   from "../hooks/useFilterParams";
+import { useTransactions }   from "../hooks/useTransactions";
+import FilterBar             from "../components/FilterBar";
+import FilterChips           from "../components/FilterChips";
+import TransactionTable      from "../components/TransactionTable";
+import StatementSelector     from "../components/StatementSelector";
+import ExportButton          from "../components/ExportButton";
 
 export default function Transactions() {
   const {
@@ -56,7 +57,7 @@ export default function Transactions() {
     <div className="min-h-screen bg-slate-950 text-slate-100 p-6 md:p-10">
       <div className="max-w-6xl mx-auto space-y-5">
 
-        {/* Header — title + statement selector */}
+        {/* Header — title + export button + statement selector */}
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <h1 className="text-2xl font-bold text-white">
@@ -67,11 +68,16 @@ export default function Transactions() {
             </p>
           </div>
 
-          {/* Statement selector */}
-          <StatementSelector
-            value={filters.statementId}
-            onChange={(id) => setFilter("statementId", id || "")}
-          />
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Export button */}
+            <ExportButton filters={filters} disabled={loading} />
+
+            {/* Statement selector */}
+            <StatementSelector
+              value={filters.statementId}
+              onChange={(id) => setFilter("statementId", id || "")}
+            />
+          </div>
         </div>
 
         {/* Filter bar */}
