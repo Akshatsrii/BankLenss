@@ -12,11 +12,11 @@
 
 const fs = require("fs");
 const path = require("path");
-const { parseStatement, ERRORS } = require("./parsers/index");
-const { unlockPdf } = require("./utils/unlockPdf");
-const { printRawItemsJson, extractAllRows } = require("./utils/extractRows");
-const { detectBank } = require("./utils/detectBank");
-const { extractFullText } = require("./utils/extractRows");
+const {parseStatement, ERRORS} = require("./parsers/index");
+const {unlockPdf} = require("./utils/unlockPdf");
+const {printRawItemsJson, extractAllRows} = require("./utils/extractRows");
+const {detectBank} = require("./utils/detectBank");
+const {extractFullText} = require("./utils/extractRows");
 
 async function run() {
   const args = process.argv.slice(2);
@@ -70,14 +70,14 @@ async function run() {
     const preview = result.transactions.slice(0, 10);
     console.log("First 10 transactions:\n");
     console.table(
-      preview.map((t) => ({
-        date: t.date,
-        description: t.description.slice(0, 35),
-        debit: t.debit,
-        credit: t.credit,
-        balance: t.balance,
-        type: t.type,
-      }))
+        preview.map((t) => ({
+          date: t.date,
+          description: t.description.slice(0, 35),
+          debit: t.debit,
+          credit: t.credit,
+          balance: t.balance,
+          type: t.type,
+        })),
     );
 
     // Summary
@@ -86,7 +86,6 @@ async function run() {
 
     console.log(`\n💸 Total Debit  : ₹${totalDebit.toFixed(2)}`);
     console.log(`💰 Total Credit : ₹${totalCredit.toFixed(2)}`);
-
   } catch (err) {
     console.error(`\n❌ Error [${err.code}]: ${err.message}`);
 

@@ -64,7 +64,7 @@ const CATEGORY_RULES = [
  * Categorizes a transaction based on its description
  *
  * @param {string} description
- * @returns {string} category name
+ * @return {string} category name
  */
 function categorize(description) {
   if (!description) return "Other";
@@ -84,7 +84,7 @@ function categorize(description) {
  * Adds a 'category' field to every transaction in the array
  *
  * @param {object[]} transactions
- * @returns {object[]} transactions with category field added
+ * @return {object[]} transactions with category field added
  */
 function categorizeAll(transactions) {
   return transactions.map((t) => ({
@@ -93,4 +93,4 @@ function categorizeAll(transactions) {
   }));
 }
 
-module.exports = { categorize, categorizeAll };
+module.exports = {categorize, categorizeAll};

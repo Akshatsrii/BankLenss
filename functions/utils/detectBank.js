@@ -55,7 +55,7 @@ const BANK_RULES = [
  * Detects the bank from PDF text content
  *
  * @param {string} text - full text extracted from PDF (all pages)
- * @returns {'SBI'|'HDFC'|'ICICI'|'AXIS'|'UNKNOWN'}
+ * @return {'SBI'|'HDFC'|'ICICI'|'AXIS'|'UNKNOWN'}
  */
 function detectBank(text) {
   if (!text || text.trim() === "") return "UNKNOWN";
@@ -66,12 +66,12 @@ function detectBank(text) {
     for (const keywordSet of bank.rules) {
       // All keywords in this set must be present
       const allMatch = keywordSet.every((keyword) =>
-        upperText.includes(keyword.toUpperCase())
+        upperText.includes(keyword.toUpperCase()),
       );
 
       if (allMatch) {
         console.log(
-          `[detectBank] Matched: ${bank.name} via keywords [${keywordSet.join(", ")}]`
+            `[detectBank] Matched: ${bank.name} via keywords [${keywordSet.join(", ")}]`,
         );
         return bank.name;
       }
@@ -82,4 +82,4 @@ function detectBank(text) {
   return "UNKNOWN";
 }
 
-module.exports = { detectBank };
+module.exports = {detectBank};

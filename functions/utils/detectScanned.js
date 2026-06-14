@@ -12,14 +12,14 @@ const MIN_CHARS_PER_PAGE = 50; // pages with fewer chars are likely scanned
 /**
  * Checks a single page for meaningful text content
  * @param {PDFPageProxy} page
- * @returns {Promise<boolean>} true if page appears scanned
+ * @return {Promise<boolean>} true if page appears scanned
  */
 async function isPageScanned(page) {
   const content = await page.getTextContent();
   const text = content.items
-    .map((item) => item.str)
-    .join("")
-    .trim();
+      .map((item) => item.str)
+      .join("")
+      .trim();
   return text.length < MIN_CHARS_PER_PAGE;
 }
 
@@ -27,13 +27,13 @@ async function isPageScanned(page) {
  * Checks all pages of a PDF for scanned content
  *
  * @param {PDFDocumentProxy} pdf
- * @returns {Promise<{ isScanned: boolean, scannedPages: number[] }>}
+ * @return {Promise<{ isScanned: boolean, scannedPages: number[] }>}
  */
 async function detectScanned(pdf) {
   const scannedPages = [];
 
   for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-    const page   = await pdf.getPage(pageNum);
+    const page = await pdf.getPage(pageNum);
     const scanned = await isPageScanned(page);
     if (scanned) scannedPages.push(pageNum);
   }
@@ -42,12 +42,12 @@ async function detectScanned(pdf) {
 
   if (isScanned) {
     console.warn(
-      `[detectScanned] Scanned pages detected: [${scannedPages.join(", ")}]. ` +
-      `OCR is not supported in v1.`
+        `[detectScanned] Scanned pages detected: [${scannedPages.join(", ")}]. ` +
+      `OCR is not supported in v1.`,
     );
   }
 
-  return { isScanned, scannedPages };
+  return {isScanned, scannedPages};
 }
 
-module.exports = { detectScanned };
+module.exports = {detectScanned};

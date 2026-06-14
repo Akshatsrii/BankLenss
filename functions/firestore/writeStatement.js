@@ -10,7 +10,7 @@
  * Returns the new statement document ID.
  */
 
-const { getFirestore, FieldValue } = require("firebase-admin/firestore");
+const {getFirestore, FieldValue} = require("firebase-admin/firestore");
 
 /**
  * Writes a statement document and returns its ID
@@ -21,7 +21,7 @@ const { getFirestore, FieldValue } = require("firebase-admin/firestore");
  * @param {string} params.fileName       - original uploaded filename
  * @param {string} params.storagePath    - Firebase Storage path
  * @param {number} params.transactionCount
- * @returns {Promise<string>} statementId
+ * @return {Promise<string>} statementId
  */
 async function writeStatement({
   userId,
@@ -48,12 +48,12 @@ async function writeStatement({
   await statementRef.set(statementData);
 
   console.log(
-    `[writeStatement] Created statement ${statementRef.id} ` +
+      `[writeStatement] Created statement ${statementRef.id} ` +
     `for user ${userId} | bank: ${bankName} | ` +
-    `transactions: ${transactionCount}`
+    `transactions: ${transactionCount}`,
   );
 
   return statementRef.id;
 }
 
-module.exports = { writeStatement };
+module.exports = {writeStatement};

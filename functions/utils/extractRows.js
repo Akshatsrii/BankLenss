@@ -15,7 +15,7 @@
  * Use this to inspect raw PDF layout before grouping
  *
  * @param {PDFPageProxy} page
- * @returns {Promise<object[]>} array of raw items
+ * @return {Promise<object[]>} array of raw items
  */
 async function extractRawItems(page) {
   const content = await page.getTextContent();
@@ -84,15 +84,15 @@ function groupItemsIntoRows(items, tolerance = 3) {
 
     // Find existing bucket within tolerance
     const bucket = buckets.find(
-      (b) => Math.abs(b.y - itemY) <= tolerance
+        (b) => Math.abs(b.y - itemY) <= tolerance,
     );
 
     if (bucket) {
-      bucket.items.push({ x: item.x, str: item.str });
+      bucket.items.push({x: item.x, str: item.str});
     } else {
       buckets.push({
         y: itemY,
-        items: [{ x: item.x, str: item.str }],
+        items: [{x: item.x, str: item.str}],
       });
     }
   }
@@ -134,7 +134,7 @@ async function extractAllRows(pdf) {
  * Used for bank detection
  *
  * @param {PDFDocumentProxy} pdf
- * @returns {Promise<string>}
+ * @return {Promise<string>}
  */
 async function extractFullText(pdf) {
   let fullText = "";

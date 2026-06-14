@@ -1,12 +1,12 @@
-const { onCall, HttpsError } = require("firebase-functions/v2/https");
-const { initializeApp }      = require("firebase-admin/app");
-const { getStorage }         = require("firebase-admin/storage");
+const {onCall, HttpsError} = require("firebase-functions/v2/https");
+const {initializeApp} = require("firebase-admin/app");
+const {getStorage} = require("firebase-admin/storage");
 
-const { parseStatement, ERRORS }   = require("./parsers/index");
-const { writeStatement }           = require("./firestore/writeStatement");
-const { writeTransactions }        = require("./firestore/writeTransactions");
-const { listTransactions }         = require("./firestore/listTransactions");
-const { listStatements }           = require("./firestore/listStatements");
+const {parseStatement, ERRORS} = require("./parsers/index");
+const {writeStatement} = require("./firestore/writeStatement");
+const {writeTransactions} = require("./firestore/writeTransactions");
+const {listTransactions} = require("./firestore/listTransactions");
+const {listStatements} = require("./firestore/listStatements");
 const {
   logProcessSuccess,
   logProcessError,
@@ -18,7 +18,7 @@ initializeApp();
 
 // ─── helloWorld ───────────────────────────────────────────────
 exports.helloWorld = onCall(async () => ({
-  message:   "Hello from Firebase Functions!",
+  message: "Hello from Firebase Functions!",
   timestamp: new Date().toISOString(),
 }));
 
@@ -28,9 +28,9 @@ exports.processStatement = onCall(async (request) => {
     throw new HttpsError("unauthenticated", "You must be logged in.");
   }
 
-  const userId                       = request.auth.uid;
-  const { storagePath, password, fileName } = request.data;
-  const uploadId = `${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
+  const userId = request.auth.uid;
+  const {storagePath, password, fileName} = request.data;
+  const uploadId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const startTime = Date.now();
 
   if (!storagePath) {
@@ -40,12 +40,12 @@ exports.processStatement = onCall(async (request) => {
   // Step 1: Download PDF from Storage
   let buffer;
   try {
-    const bucket     = getStorage().bucket();
-    const [bytes]    = await bucket.file(storagePath).download();
+    const bucket = getStorage().bucket();
+    const [bytes] = await bucket.file(storagePath).download();
     buffer = bytes;
     console.log(`[processStatement] uploadId=${uploadId} Downloaded ${buffer.length} bytes`);
   } catch (err) {
-    logProcessError({ uploadId, userId, errorType: "STORAGE_DOWNLOAD", errorMessage: err.message, fileName, durationMs: Date.now() - startTime });
+    logProcessError({uploadId, userId, errorType: "STORAGE_DOWNLOAD", errorMessage: err.message, fileName, durationMs: Date.now() - startTime});
     throw new HttpsError("not-found", "Could not find the uploaded PDF in storage.");
   }
 
@@ -54,21 +54,21 @@ exports.processStatement = onCall(async (request) => {
   try {
     parseResult = await parseStatement(buffer, password || "");
   } catch (err) {
-    logProcessError({ uploadId, userId, errorType: err.code || "PARSE_FAILED", errorMessage: err.message, fileName, durationMs: Date.now() - startTime });
+    logProcessError({uploadId, userId, errorType: err.code || "PARSE_FAILED", errorMessage: err.message, fileName, durationMs: Date.now() - startTime});
 
-    if (err.code === ERRORS.WRONG_PASSWORD)   throw new HttpsError("invalid-argument", err.message);
-    if (err.code === ERRORS.CORRUPT_PDF)      throw new HttpsError("invalid-argument", err.message);
-    if (err.code === ERRORS.UNSUPPORTED_BANK) throw new HttpsError("unimplemented",    err.message);
-    if (err.code === ERRORS.SCANNED_PDF)      throw new HttpsError("invalid-argument", err.message);
+    if (err.code === ERRORS.WRONG_PASSWORD) throw new HttpsError("invalid-argument", err.message);
+    if (err.code === ERRORS.CORRUPT_PDF) throw new HttpsError("invalid-argument", err.message);
+    if (err.code === ERRORS.UNSUPPORTED_BANK) throw new HttpsError("unimplemented", err.message);
+    if (err.code === ERRORS.SCANNED_PDF) throw new HttpsError("invalid-argument", err.message);
     throw new HttpsError("internal", err.message);
   }
 
-  const { bank, transactions, warnings } = parseResult;
+  const {bank, transactions, warnings} = parseResult;
 
   // Log scanned warning if partial
   const scannedWarning = warnings.find((w) => w.type === "SCANNED_PDF");
   if (scannedWarning) {
-    logScannedWarning({ uploadId, userId, scannedPages: scannedWarning.scannedPages });
+    logScannedWarning({uploadId, userId, scannedPages: scannedWarning.scannedPages});
   }
 
   // Step 3: Write statement doc
@@ -79,7 +79,7 @@ exports.processStatement = onCall(async (request) => {
   });
 
   // Step 4: Batch-write transactions
-  const { written } = await writeTransactions({ userId, statementId, transactions });
+  const {written} = await writeTransactions({userId, statementId, transactions});
 
   logProcessSuccess({
     uploadId, userId, bank, txCount: written, fileName,
@@ -101,16 +101,16 @@ exports.listTransactions = onCall(async (request) => {
     throw new HttpsError("unauthenticated", "You must be logged in.");
   }
 
-  const userId    = request.auth.uid;
+  const userId = request.auth.uid;
   const startTime = Date.now();
-  const filters   = request.data;
+  const filters = request.data;
 
   try {
-    const result = await listTransactions({ userId, ...filters });
+    const result = await listTransactions({userId, ...filters});
 
     logListTransactions({
       userId,
-      filters: { from: filters.from, to: filters.to, type: filters.type, search: filters.search, statementId: filters.statementId },
+      filters: {from: filters.from, to: filters.to, type: filters.type, search: filters.search, statementId: filters.statementId},
       resultCount: result.total,
       durationMs: Date.now() - startTime,
     });
@@ -129,7 +129,7 @@ exports.listStatements = onCall(async (request) => {
   }
   try {
     const statements = await listStatements(request.auth.uid);
-    return { data: statements };
+    return {data: statements};
   } catch (err) {
     console.error("[listStatements] Error:", err);
     throw new HttpsError("internal", err.message);

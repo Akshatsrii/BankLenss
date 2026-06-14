@@ -28,14 +28,14 @@
  * }
  */
 
-const { getFirestore } = require("firebase-admin/firestore");
+const {getFirestore} = require("firebase-admin/firestore");
 
 const MAX_PAGE_SIZE = 100;
 const DEFAULT_PAGE_SIZE = 20;
 
 /**
  * @param {object} params
- * @returns {Promise<object>}
+ * @return {Promise<object>}
  */
 async function listTransactions({
   userId,
@@ -53,16 +53,16 @@ async function listTransactions({
   const db = getFirestore();
 
   const size = Math.min(
-    Math.max(1, parseInt(pageSize) || DEFAULT_PAGE_SIZE),
-    MAX_PAGE_SIZE
+      Math.max(1, parseInt(pageSize) || DEFAULT_PAGE_SIZE),
+      MAX_PAGE_SIZE,
   );
 
   const currentPage = Math.max(1, parseInt(page) || 1);
 
   // Base query
   let query = db
-    .collection("transactions")
-    .where("userId", "==", userId);
+      .collection("transactions")
+      .where("userId", "==", userId);
 
   // Statement filter
   if (statementId) {
@@ -96,7 +96,7 @@ async function listTransactions({
 
     if (!isNaN(min)) {
       results = results.filter(
-        (t) => t.debit >= min || t.credit >= min
+          (t) => t.debit >= min || t.credit >= min,
       );
     }
   }
@@ -106,9 +106,9 @@ async function listTransactions({
 
     if (!isNaN(max)) {
       results = results.filter(
-        (t) =>
-          (t.debit > 0 && t.debit <= max) ||
-          (t.credit > 0 && t.credit <= max)
+          (t) =>
+            (t.debit > 0 && t.debit <= max) ||
+          (t.credit > 0 && t.credit <= max),
       );
     }
   }
@@ -119,15 +119,15 @@ async function listTransactions({
 
     results = results.filter((t) =>
       (t.description || "")
-        .toLowerCase()
-        .includes(term)
+          .toLowerCase()
+          .includes(term),
     );
   }
 
   // Category filter (in-memory — stored on transaction doc)
   if (category && category !== "all") {
     results = results.filter(
-      (t) => t.category === category
+        (t) => t.category === category,
     );
   }
 
@@ -138,10 +138,10 @@ async function listTransactions({
   const paginated = results.slice(offset, offset + size);
 
   console.log(
-    `[listTransactions] user: ${userId} | ` +
+      `[listTransactions] user: ${userId} | ` +
     `statementId: ${statementId || "all"} | ` +
     `filters: from=${from} to=${to} type=${type} category=${category || "all"} search=${search} | ` +
-    `total: ${total} | page: ${currentPage}/${totalPages}`
+    `total: ${total} | page: ${currentPage}/${totalPages}`,
   );
 
   return {
@@ -153,4 +153,4 @@ async function listTransactions({
   };
 }
 
-module.exports = { listTransactions };
+module.exports = {listTransactions};

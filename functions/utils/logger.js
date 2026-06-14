@@ -22,7 +22,7 @@
 /**
  * Masks userId to last 6 chars for log privacy
  * @param {string} uid
- * @returns {string}
+ * @return {string}
  */
 function maskUid(uid) {
   if (!uid) return "unknown";
@@ -70,7 +70,7 @@ function logProcessSuccess({
   scannedPages,
 }) {
   log("INFO", "processStatement", {
-    message:     "Statement processed successfully",
+    message: "Statement processed successfully",
     uploadId,
     userId,
     bank,
@@ -93,7 +93,7 @@ function logProcessError({
   durationMs,
 }) {
   log("ERROR", "processStatement", {
-    message:      "Statement processing failed",
+    message: "Statement processing failed",
     uploadId,
     userId,
     errorType,
@@ -124,9 +124,9 @@ function logListTransactions({
 /**
  * Log a scanned PDF warning
  */
-function logScannedWarning({ uploadId, userId, scannedPages }) {
+function logScannedWarning({uploadId, userId, scannedPages}) {
   log("WARN", "processStatement", {
-    message:     "Scanned PDF detected — OCR not supported in v1",
+    message: "Scanned PDF detected — OCR not supported in v1",
     uploadId,
     userId,
     scannedPages,

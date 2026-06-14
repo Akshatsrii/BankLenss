@@ -12,7 +12,7 @@
 
 /**
  * @param {object[]} transactions - raw output from parser
- * @returns {object[]} cleaned transactions
+ * @return {object[]} cleaned transactions
  */
 function normalizeTransactions(transactions) {
   const cleaned = [];
@@ -63,10 +63,10 @@ function normalizeTransactions(transactions) {
   }
 
   console.log(
-    `[normalize] ${transactions.length} raw → ${cleaned.length} valid transactions`
+      `[normalize] ${transactions.length} raw → ${cleaned.length} valid transactions`,
   );
 
   return cleaned;
 }
 
-module.exports = { normalizeTransactions };
+module.exports = {normalizeTransactions};

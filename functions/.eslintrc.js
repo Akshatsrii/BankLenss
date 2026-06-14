@@ -1,40 +1,19 @@
 module.exports = {
   root: true,
   env: {
-    es6:  true,
-    es2021: true,
     node: true,
-  },
-  parserOptions: {
-    ecmaVersion: 2021,
+    es6: true,
   },
   extends: [
     "eslint:recommended",
     "google",
   ],
-  rules: {
-    // Google base rules
-    "no-restricted-globals": ["error", "name", "length"],
-    "prefer-arrow-callback":  "error",
-    "quotes": ["error", "double", { "allowTemplateLiterals": true }],
-
-    // Custom rules
-    "no-console":       "off",        // Cloud Functions use console for logging
-    "no-unused-vars":   ["error", { "argsIgnorePattern": "^_" }],
-    "no-var":           "error",
-    "prefer-const":     "error",
-    "eqeqeq":           "error",
-    "no-throw-literal": "error",
+  parserOptions: {
+    ecmaVersion: 2020,
   },
-  overrides: [
-    {
-      // Test files — allow vitest globals
-      files: ["**/*.test.*", "**/*.spec.*"],
-      env: {
-        mocha: true,
-      },
-      rules: {},
-    },
-  ],
-  globals: {},
+  rules: {
+    "max-len": "off",
+    "require-jsdoc": "off",
+    "valid-jsdoc": "off",
+  },
 };

@@ -14,13 +14,13 @@
 process.env.FIRESTORE_EMULATOR_HOST =
   process.env.FIRESTORE_EMULATOR_HOST || "127.0.0.1:8080";
 
-const { initializeApp } = require("firebase-admin/app");
-const { getFirestore, FieldValue } = require("firebase-admin/firestore");
-const { writeTransactions } = require("./firestore/writeTransactions");
-const { writeStatement } = require("./firestore/writeStatement");
-const { listTransactions } = require("./firestore/listTransactions");
+const {initializeApp} = require("firebase-admin/app");
+const {getFirestore, FieldValue} = require("firebase-admin/firestore");
+const {writeTransactions} = require("./firestore/writeTransactions");
+const {writeStatement} = require("./firestore/writeStatement");
+const {listTransactions} = require("./firestore/listTransactions");
 
-initializeApp({ projectId: "bank-statement-digitizer-dev" });
+initializeApp({projectId: "bank-statement-digitizer-dev"});
 
 const TEST_USER_ID = "test-user-001";
 
@@ -32,7 +32,7 @@ function randomAmount() {
 
 function randomDate(start, end) {
   const d = new Date(
-    start.getTime() + Math.random() * (end.getTime() - start.getTime())
+      start.getTime() + Math.random() * (end.getTime() - start.getTime()),
   );
   return d.toISOString().slice(0, 10); // YYYY-MM-DD
 }
@@ -96,7 +96,7 @@ async function runTests() {
   // Seed 120 transactions
   const transactions = generateTransactions(120);
 
-  const { written } = await writeTransactions({
+  const {written} = await writeTransactions({
     userId: TEST_USER_ID,
     statementId,
     transactions,
@@ -151,8 +151,8 @@ async function runTests() {
   // ─── Test 5: Debit + Credit counts should add up ───────────
   console.log("\n📋 Test 5: Debit + Credit = Total");
   console.assert(
-    t3.total + t4.total === t1.total,
-    `debit(${t3.total}) + credit(${t4.total}) should = total(${t1.total})`
+      t3.total + t4.total === t1.total,
+      `debit(${t3.total}) + credit(${t4.total}) should = total(${t1.total})`,
   );
   console.log(`   ✅ ${t3.total} + ${t4.total} = ${t1.total}`);
 
@@ -165,7 +165,7 @@ async function runTests() {
     pageSize: 100,
   });
   const allInRange = t6.data.every(
-    (t) => t.date >= "2024-01-01" && t.date <= "2024-01-31"
+      (t) => t.date >= "2024-01-01" && t.date <= "2024-01-31",
   );
   console.assert(allInRange, "All results should be within Jan 2024");
   console.log(`   ✅ Jan 2024 transactions: ${t6.total} | all in range: ${allInRange}`);
@@ -178,7 +178,7 @@ async function runTests() {
     pageSize: 100,
   });
   const allZomato = t7.data.every((t) =>
-    t.description.toLowerCase().includes("zomato")
+    t.description.toLowerCase().includes("zomato"),
   );
   console.assert(allZomato, "All results should contain ZOMATO");
   console.log(`   ✅ ZOMATO transactions: ${t7.total} | all match: ${allZomato}`);
@@ -191,7 +191,7 @@ async function runTests() {
     pageSize: 100,
   });
   const allAboveMin = t8.data.every(
-    (t) => t.debit >= 10000 || t.credit >= 10000
+      (t) => t.debit >= 10000 || t.credit >= 10000,
   );
   console.assert(allAboveMin, "All amounts should be >= 10000");
   console.log(`   ✅ transactions ≥ ₹10000: ${t8.total} | all valid: ${allAboveMin}`);
@@ -208,7 +208,7 @@ async function runTests() {
 
   // ─── Test 10: Deduplication check ─────────────────────────
   console.log("\n📋 Test 10: Re-upload deduplication");
-  const { written: rewritten } = await writeTransactions({
+  const {written: rewritten} = await writeTransactions({
     userId: TEST_USER_ID,
     statementId,
     transactions, // same 120 transactions again
@@ -218,11 +218,11 @@ async function runTests() {
     pageSize: 1,
   });
   console.assert(
-    t10.total === t1.total,
-    "Total should not increase after duplicate upload"
+      t10.total === t1.total,
+      "Total should not increase after duplicate upload",
   );
   console.log(
-    `   ✅ After re-upload: total still ${t10.total} (no duplicates added)`
+      `   ✅ After re-upload: total still ${t10.total} (no duplicates added)`,
   );
 
   console.log("\n" + "=".repeat(60));

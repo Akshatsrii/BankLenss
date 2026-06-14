@@ -15,7 +15,7 @@
 
 const fs = require("fs");
 const path = require("path");
-const { unlockPdf, PDF_ERRORS } = require("./utils/unlockPdf");
+const {unlockPdf, PDF_ERRORS} = require("./utils/unlockPdf");
 
 async function runTests(pdfPath, correctPassword) {
   const buffer = fs.readFileSync(path.resolve(pdfPath));
