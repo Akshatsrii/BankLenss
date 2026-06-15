@@ -3,8 +3,20 @@ import { useState, useEffect } from "react";
 import { signOut } from "firebase/auth";
 import { auth } from "../firebase";
 import { useAuth } from "../hooks/useAuth";
+import { useTheme } from "../hooks/useTheme";
+import { Sun, Moon } from "lucide-react";
 
 const NAV_LINKS = [
+  {
+    to: "/dashboard",
+    label: "Dashboard",
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" stroke="currentColor" fill="none" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+        <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+      </svg>
+    ),
+  },
   {
     to: "/upload",
     label: "Upload",
@@ -32,7 +44,6 @@ const NAV_LINKS = [
         <polyline points="14 2 14 8 20 8" />
         <line x1="16" y1="13" x2="8" y2="13" />
         <line x1="16" y1="17" x2="8" y2="17" />
-        <polyline points="10 9 9 9 8 9" />
       </svg>
     ),
   },
@@ -45,42 +56,29 @@ const NAV_LINKS = [
       </svg>
     ),
   },
-  {
-    to: "/export",
-    label: "Export",
-    icon: (
-      <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" stroke="currentColor" fill="none" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="3" />
-        <path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14M15.54 8.46a5 5 0 010 7.07M8.46 8.46a5 5 0 000 7.07" />
-      </svg>
-    ),
-  },
 ];
 
 export default function Navbar() {
-  const { pathname }  = useLocation();
-  const navigate      = useNavigate();
-  const { user }      = useAuth();
+  const { pathname }      = useLocation();
+  const navigate          = useNavigate();
+  const { user }          = useAuth();
+  const { isDark, toggle } = useTheme();
 
   const [time, setTime]         = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // Live clock
   useEffect(() => {
-    const tick = () =>
-      setTime(new Date().toLocaleTimeString("en-US", { hour12: false }));
+    const tick = () => setTime(new Date().toLocaleTimeString("en-US", { hour12: false }));
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, []);
 
-  // Sign out handler
   const handleSignOut = async () => {
     await signOut(auth);
     navigate("/login", { replace: true });
   };
 
-  // Active link style — underline indicator at bottom of nav
   const linkClass = (to) =>
     `relative flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-medium transition-all duration-150 select-none ${
       pathname === to
@@ -88,17 +86,14 @@ export default function Navbar() {
         : "text-slate-400 hover:text-slate-100 hover:bg-white/5"
     }`;
 
-  // User initials for avatar
-  const initials = user?.email
-    ? user.email.slice(0, 2).toUpperCase()
-    : "AK";
+  const initials = user?.email ? user.email.slice(0, 2).toUpperCase() : "AK";
 
   return (
     <nav
       className="bg-[#0f111a] border-b border-white/[0.07] px-6 h-14 flex items-center gap-0 relative"
       style={{ fontFamily: "'DM Mono', monospace" }}
     >
-      {/* ── Brand ─────────────────────────────────────────────── */}
+      {/* Brand */}
       <div className="flex items-center gap-2.5 mr-8 flex-shrink-0">
         <div className="w-7 h-7 rounded-md bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center">
           <svg className="w-4 h-4 fill-white" viewBox="0 0 16 16">
@@ -106,45 +101,36 @@ export default function Navbar() {
             <rect x="1" y="2" width="14" height="12" rx="2" fill="none" stroke="white" strokeWidth="1.2" />
           </svg>
         </div>
-        <span
-          className="text-slate-200 text-[15px] font-bold tracking-wide"
-          style={{ fontFamily: "'Syne', sans-serif" }}
-        >
+        <span className="text-slate-200 text-[15px] font-bold tracking-wide" style={{ fontFamily: "'Syne', sans-serif" }}>
           Bank<span className="text-blue-400">Digitizer</span>
         </span>
       </div>
 
-      {/* ── Desktop nav links (only when logged in) ───────────── */}
+      {/* Desktop links */}
       {user && (
         <div className="hidden md:flex items-center gap-0.5 flex-1">
           {NAV_LINKS.map(({ to, label, icon, badge }) => (
             <Link key={to} to={to} className={linkClass(to)}>
-              {icon}
-              {label}
+              {icon}{label}
               {badge && (
-                <span className="ml-0.5 text-[10px] bg-blue-500 text-white px-1.5 py-px rounded-full font-semibold">
-                  {badge}
-                </span>
+                <span className="ml-0.5 text-[10px] bg-blue-500 text-white px-1.5 py-px rounded-full font-semibold">{badge}</span>
               )}
             </Link>
           ))}
         </div>
       )}
 
-      {/* ── Right side ────────────────────────────────────────── */}
+      {/* Right side */}
       <div className="flex items-center gap-3 ml-auto flex-shrink-0">
 
-        {/* Search — only when logged in */}
-        {user && (
-          <button className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 border border-white/[0.07] rounded-md bg-white/[0.02] text-slate-500 text-xs hover:border-blue-500/40 hover:text-slate-300 transition-all duration-150">
-            <svg className="w-3 h-3" viewBox="0 0 24 24" stroke="currentColor" fill="none" strokeWidth={1.8} strokeLinecap="round">
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-            Search…
-            <span className="text-[10px] border border-white/10 rounded px-1 py-px">⌘K</span>
-          </button>
-        )}
+        {/* Theme toggle */}
+        <button
+          onClick={toggle}
+          className="hidden md:flex items-center justify-center w-8 h-8 rounded-lg border border-white/[0.07] bg-white/[0.02] text-slate-500 hover:text-slate-300 transition-colors"
+          title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+        >
+          {isDark ? <Sun size={14} /> : <Moon size={14} />}
+        </button>
 
         {user && <div className="hidden md:block w-px h-5 bg-white/[0.07]" />}
 
@@ -158,34 +144,31 @@ export default function Navbar() {
 
         {/* Clock */}
         {user && (
-          <span className="hidden md:block text-[11px] text-slate-600 tabular-nums w-[70px] text-right">
-            {time}
-          </span>
+          <span className="hidden md:block text-[11px] text-slate-600 tabular-nums w-[70px] text-right">{time}</span>
         )}
 
         {user && <div className="hidden md:block w-px h-5 bg-white/[0.07]" />}
 
-        {/* Avatar + email + sign out — when logged in */}
+        {/* Avatar + email + sign out */}
         {user && (
           <div className="flex items-center gap-2.5">
-            {/* Email — hidden on small screens */}
             <span className="hidden lg:block text-[11px] text-slate-500 truncate max-w-[140px]">
               {user.email}
             </span>
 
-            {/* Avatar */}
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#1e3a5f] to-[#1d4ed8] flex items-center justify-center text-[11px] font-semibold text-blue-300 border border-blue-500/30 cursor-pointer select-none">
+            {/* Avatar — click goes to profile */}
+            <button
+              onClick={() => navigate("/profile")}
+              className="w-8 h-8 rounded-full bg-gradient-to-br from-[#1e3a5f] to-[#1d4ed8] flex items-center justify-center text-[11px] font-semibold text-blue-300 border border-blue-500/30 select-none hover:ring-2 hover:ring-blue-500/40 transition-all"
+              title="Profile"
+            >
               {initials}
-            </div>
+            </button>
 
-            {/* Sign Out button */}
+            {/* Sign Out */}
             <button
               onClick={handleSignOut}
-              className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5
-                         border border-white/[0.07] rounded-md
-                         bg-white/[0.02] text-slate-500 text-xs
-                         hover:border-red-500/30 hover:text-red-400
-                         transition-all duration-150"
+              className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 border border-white/[0.07] rounded-md bg-white/[0.02] text-slate-500 text-xs hover:border-red-500/30 hover:text-red-400 transition-all duration-150"
               title="Sign out"
             >
               <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" stroke="currentColor" fill="none" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
@@ -196,12 +179,11 @@ export default function Navbar() {
           </div>
         )}
 
-        {/* Mobile hamburger — only when logged in */}
+        {/* Mobile hamburger */}
         {user && (
           <button
             className="md:hidden text-slate-400 hover:text-slate-100 transition-colors"
             onClick={() => setMenuOpen(!menuOpen)}
-            aria-label="Toggle menu"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24" stroke="currentColor" fill="none" strokeWidth={1.8} strokeLinecap="round">
               {menuOpen
@@ -213,44 +195,35 @@ export default function Navbar() {
         )}
       </div>
 
-      {/* ── Mobile drawer ──────────────────────────────────────── */}
+      {/* Mobile drawer */}
       {user && menuOpen && (
         <div className="md:hidden absolute top-14 left-0 right-0 bg-[#0f111a] border-b border-white/[0.07] z-50 px-4 py-3 flex flex-col gap-1">
-          {NAV_LINKS.map(({ to, label, icon, badge }) => (
+          {NAV_LINKS.map(({ to, label, icon }) => (
             <Link
-              key={to}
-              to={to}
+              key={to} to={to}
               className={`flex items-center gap-2 px-3 py-2.5 rounded-md text-sm ${
                 pathname === to ? "bg-blue-500/10 text-slate-100" : "text-slate-400"
               }`}
               onClick={() => setMenuOpen(false)}
             >
-              {icon}
-              {label}
-              {badge && (
-                <span className="ml-auto text-[10px] bg-blue-500 text-white px-1.5 py-px rounded-full">
-                  {badge}
-                </span>
-              )}
+              {icon}{label}
             </Link>
           ))}
-
-          {/* Mobile sign out */}
+          <Link to="/profile" className="flex items-center gap-2 px-3 py-2.5 rounded-md text-sm text-slate-400" onClick={() => setMenuOpen(false)}>
+            <svg viewBox="0 0 24 24" className="w-4 h-4" stroke="currentColor" fill="none" strokeWidth={1.8} strokeLinecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z"/></svg>
+            Profile
+          </Link>
           <button
             onClick={() => { setMenuOpen(false); handleSignOut(); }}
-            className="flex items-center gap-2 px-3 py-2.5 rounded-md text-sm text-red-400 hover:bg-red-500/10 transition-colors mt-1"
+            className="flex items-center gap-2 px-3 py-2.5 rounded-md text-sm text-red-400 hover:bg-red-500/10 transition-colors"
           >
             <svg viewBox="0 0 24 24" className="w-4 h-4" stroke="currentColor" fill="none" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
             </svg>
             Sign Out
           </button>
-
-          {/* Mobile footer info */}
           <div className="mt-2 pt-2 border-t border-white/[0.07] flex items-center justify-between text-xs text-slate-600">
-            <span className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400" /> OCR Ready
-            </span>
+            <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-green-400" /> OCR Ready</span>
             <span className="tabular-nums">{time}</span>
           </div>
         </div>
