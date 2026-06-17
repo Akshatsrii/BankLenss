@@ -24,7 +24,10 @@ export const db = getFirestore(app);
 export const storage = getStorage(app);
 export const functions = getFunctions(app);
 
-if (window.location.hostname === "localhost") {
+// if (window.location.hostname === "localhost") {
+//   connectFunctionsEmulator(functions, "127.0.0.1", 5001);
+// }
+if (false) {
   connectFunctionsEmulator(functions, "127.0.0.1", 5001);
 }
 
