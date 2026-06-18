@@ -120,7 +120,7 @@ Filter by date range, debit/credit type, category, amount range, and description
 <td width="50%">
 
 ### 📊 Analytics Dashboard
-Spend by category bar chart, monthly income vs expense line chart, top merchants, and auto-generated financial insights — all from real transaction data.
+monthly income vs expense line chart, top merchants, and auto-generated financial insights — all from real transaction data.
 
 </td>
 </tr>
