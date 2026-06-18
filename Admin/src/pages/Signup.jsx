@@ -69,7 +69,6 @@ strong: "w-full",
 function validate() {
 if (!email.trim()) return "Email is required.";
 
-```
 if (!/\S+@\S+\.\S+/.test(email))
   return "Enter a valid email.";
 
@@ -83,14 +82,12 @@ if (password !== confirm)
   return "Passwords do not match.";
 
 return null;
-```
 
 }
 
 const handleSignup = useCallback(async () => {
 const validationErr = validate();
 
-```
 if (validationErr) {
   setError(validationErr);
   return;
@@ -128,7 +125,6 @@ try {
 } finally {
   setLoading(false);
 }
-```
 
 }, [email, password, confirm, navigate]);
 
@@ -149,7 +145,6 @@ return <Navigate to="/dashboard" replace />;
 
 return ( <div className="h-screen overflow-hidden flex bg-[#081327]">
 
-```
   {/* LEFT IMAGE */}
   <div className="hidden lg:flex w-1/2 h-screen items-center justify-center bg-[#071226] overflow-hidden">
 
