@@ -13,22 +13,42 @@
 import { useEffect } from "react";
 import { CheckCircle, XCircle, Info, X } from "lucide-react";
 
+const SURFACE    = "#12161F";
+const GOLD       = "#C9A227";
+const GOLD_SOFT  = "#D9B65A";
+const TEXT_DIM   = "#9AA1B2";
+const TEXT_FAINT = "#5F6678";
+const GREEN      = "#34D399";
+const RED        = "#F87171";
+
+const ICON_COLOR = {
+  success: GREEN,
+  error:   RED,
+  info:    GOLD_SOFT,
+};
+
 const ICONS = {
-  success: <CheckCircle size={20} className="text-green-400" />,
-  error:   <XCircle    size={20} className="text-red-400"   />,
-  info:    <Info       size={20} className="text-blue-400"  />,
+  success: <CheckCircle size={20} style={{ color: GREEN }} />,
+  error:   <XCircle    size={20} style={{ color: RED   }} />,
+  info:    <Info       size={20} style={{ color: GOLD_SOFT }} />,
 };
 
-const BG = {
-  success: "border-green-500/30 bg-green-500/10",
-  error:   "border-red-500/30   bg-red-500/10",
-  info:    "border-blue-500/30  bg-blue-500/10",
+const BORDER_COLOR = {
+  success: `${GREEN}4D`,
+  error:   `${RED}4D`,
+  info:    `${GOLD}4D`,
 };
 
-const TEXT = {
-  success: "text-green-300",
-  error:   "text-red-300",
-  info:    "text-blue-300",
+const BG_COLOR = {
+  success: `${GREEN}14`,
+  error:   `${RED}14`,
+  info:    `${GOLD}14`,
+};
+
+const TITLE_COLOR = {
+  success: GREEN,
+  error:   RED,
+  info:    GOLD_SOFT,
 };
 
 export default function Toast({ toast, onClose }) {
@@ -44,11 +64,14 @@ export default function Toast({ toast, onClose }) {
   const type = toast.type || "info";
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 animate-fade-in">
+    <div className="fixed bottom-6 right-6 z-50 animate-fade-in" style={{ fontFamily: "'Inter', sans-serif" }}>
       <div
-        className={`flex items-start gap-3 px-4 py-3 rounded-xl border
-                    shadow-xl backdrop-blur-sm max-w-sm
-                    ${BG[type]}`}
+        className="flex items-start gap-3 px-4 py-3 rounded-xl border shadow-xl backdrop-blur-sm max-w-sm"
+        style={{
+          backgroundColor: BG_COLOR[type],
+          borderColor: BORDER_COLOR[type],
+          boxShadow: "0 16px 36px -20px rgba(0,0,0,0.6)",
+        }}
       >
         <div className="mt-0.5 shrink-0">
           {ICONS[type]}
@@ -56,19 +79,21 @@ export default function Toast({ toast, onClose }) {
 
         <div className="flex-1 min-w-0">
           {toast.title && (
-            <p className={`text-sm font-semibold ${TEXT[type]}`}>
+            <p className="text-sm font-semibold" style={{ color: TITLE_COLOR[type] }}>
               {toast.title}
             </p>
           )}
-          <p className="text-sm text-slate-300 mt-0.5 break-words">
+          <p className="text-sm mt-0.5 break-words" style={{ color: TEXT_DIM }}>
             {toast.message}
           </p>
         </div>
 
         <button
           onClick={onClose}
-          className="shrink-0 text-slate-500 hover:text-slate-300
-                     transition-colors mt-0.5"
+          className="shrink-0 transition-colors duration-200 mt-0.5"
+          style={{ color: TEXT_FAINT }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = TEXT_DIM)}
+          onMouseLeave={(e) => (e.currentTarget.style.color = TEXT_FAINT)}
         >
           <X size={16} />
         </button>
