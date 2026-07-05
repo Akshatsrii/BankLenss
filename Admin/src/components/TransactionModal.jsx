@@ -6,6 +6,18 @@
 import { X, Copy, CheckCircle, ArrowUpCircle, ArrowDownCircle } from "lucide-react";
 import { useState } from "react";
 
+const INK        = "#0A0E17";
+const SURFACE    = "#12161F";
+const BORDER     = "#1F2530";
+const BORDER_SOFT= "#1B202B";
+const GOLD       = "#C9A227";
+const GOLD_SOFT  = "#D9B65A";
+const TEXT       = "#EDEFF3";
+const TEXT_DIM   = "#9AA1B2";
+const TEXT_FAINT = "#5F6678";
+const GREEN      = "#34D399";
+const RED        = "#F87171";
+
 const CATEGORY_COLORS = {
   Food:       "text-orange-400 bg-orange-500/10 border-orange-500/20",
   Salary:     "text-green-400  bg-green-500/10  border-green-500/20",
@@ -22,9 +34,17 @@ const CATEGORY_COLORS = {
 
 function Row({ label, value, mono = false }) {
   return (
-    <div className="flex items-start justify-between gap-4 py-3 border-b border-slate-800 last:border-0">
-      <span className="text-xs text-slate-500 uppercase tracking-wider shrink-0">{label}</span>
-      <span className={`text-sm text-slate-200 text-right ${mono ? "font-mono" : ""}`}>{value}</span>
+    <div
+      className="flex items-start justify-between gap-4 py-3 last:border-0"
+      style={{ borderBottom: `1px solid ${BORDER_SOFT}` }}
+    >
+      <span className="text-xs uppercase tracking-wider shrink-0" style={{ color: TEXT_FAINT }}>{label}</span>
+      <span
+        className={`text-sm text-right ${mono ? "font-mono" : ""}`}
+        style={{ color: TEXT }}
+      >
+        {value}
+      </span>
     </div>
   );
 }
@@ -42,78 +62,100 @@ export default function TransactionModal({ transaction, onClose }) {
 
   const amount   = transaction.type === "credit" ? transaction.credit : transaction.debit;
   const catClass = CATEGORY_COLORS[transaction.category] || CATEGORY_COLORS.Other;
+  const isCredit = transaction.type === "credit";
 
   return (
     <div
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50
-                 flex items-center justify-center p-4"
+      className="fixed inset-0 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
       onClick={onClose}
     >
       <div
-        className="bg-slate-900 border border-slate-700 rounded-2xl
-                   w-full max-w-md shadow-2xl"
+        className="rounded-2xl w-full max-w-md shadow-2xl"
+        style={{ backgroundColor: SURFACE, border: `1px solid ${BORDER}`, fontFamily: "'Inter', sans-serif" }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800">
+        <div
+          className="flex items-center justify-between px-5 py-4"
+          style={{ borderBottom: `1px solid ${BORDER_SOFT}` }}
+        >
           <div className="flex items-center gap-2.5">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-              transaction.type === "credit" ? "bg-green-500/10" : "bg-red-500/10"
-            }`}>
-              {transaction.type === "credit"
-                ? <ArrowUpCircle   size={16} className="text-green-400" />
-                : <ArrowDownCircle size={16} className="text-red-400"   />
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: isCredit ? `${GREEN}1A` : `${RED}1A` }}
+            >
+              {isCredit
+                ? <ArrowUpCircle   size={16} style={{ color: GREEN }} />
+                : <ArrowDownCircle size={16} style={{ color: RED }} />
               }
             </div>
-            <span className="text-sm font-semibold text-white">Transaction Detail</span>
+            <span className="text-sm font-semibold" style={{ color: TEXT, fontFamily: "'Fraunces', serif" }}>
+              Transaction Detail
+            </span>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-500 hover:text-slate-300 transition-colors"
+            className="transition-colors duration-200"
+            style={{ color: TEXT_FAINT }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = TEXT_DIM)}
+            onMouseLeave={(e) => (e.currentTarget.style.color = TEXT_FAINT)}
           >
             <X size={18} />
           </button>
         </div>
 
         {/* Amount hero */}
-        <div className="px-5 py-6 text-center border-b border-slate-800">
-          <p className={`text-4xl font-bold tabular-nums ${
-            transaction.type === "credit" ? "text-green-400" : "text-red-400"
-          }`}>
-            {transaction.type === "credit" ? "+" : "-"}
+        <div className="px-5 py-6 text-center" style={{ borderBottom: `1px solid ${BORDER_SOFT}` }}>
+          <p
+            className="text-4xl font-bold tabular-nums"
+            style={{ color: isCredit ? GREEN : RED }}
+          >
+            {isCredit ? "+" : "-"}
             ₹{amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
           </p>
-          <p className="text-slate-500 text-sm mt-1">{transaction.date}</p>
+          <p className="text-sm mt-1" style={{ color: TEXT_FAINT }}>{transaction.date}</p>
         </div>
 
         {/* Details */}
         <div className="px-5 py-2">
           {/* Description with copy */}
-          <div className="flex items-start justify-between gap-4 py-3 border-b border-slate-800">
-            <span className="text-xs text-slate-500 uppercase tracking-wider shrink-0">Description</span>
+          <div
+            className="flex items-start justify-between gap-4 py-3"
+            style={{ borderBottom: `1px solid ${BORDER_SOFT}` }}
+          >
+            <span className="text-xs uppercase tracking-wider shrink-0" style={{ color: TEXT_FAINT }}>
+              Description
+            </span>
             <div className="flex items-start gap-2">
-              <span className="text-sm text-slate-200 text-right leading-relaxed">
+              <span className="text-sm text-right leading-relaxed" style={{ color: TEXT }}>
                 {transaction.description}
               </span>
               <button
                 onClick={handleCopy}
-                className="shrink-0 text-slate-500 hover:text-slate-300 transition-colors mt-0.5"
+                className="shrink-0 transition-colors duration-200 mt-0.5"
+                style={{ color: TEXT_FAINT }}
+                onMouseEnter={(e) => { if (!copied) e.currentTarget.style.color = TEXT_DIM; }}
+                onMouseLeave={(e) => { if (!copied) e.currentTarget.style.color = TEXT_FAINT; }}
                 title="Copy description"
               >
                 {copied
-                  ? <CheckCircle size={14} className="text-green-400" />
+                  ? <CheckCircle size={14} style={{ color: GREEN }} />
                   : <Copy        size={14} />
                 }
               </button>
             </div>
           </div>
 
-          <Row label="Type"    value={transaction.type === "credit" ? "Credit" : "Debit"} />
+          <Row label="Type"    value={isCredit ? "Credit" : "Debit"} />
           <Row label="Balance" value={`₹${transaction.balance?.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`} mono />
 
           {/* Category */}
-          <div className="flex items-center justify-between py-3 border-b border-slate-800">
-            <span className="text-xs text-slate-500 uppercase tracking-wider">Category</span>
+          <div
+            className="flex items-center justify-between py-3"
+            style={{ borderBottom: `1px solid ${BORDER_SOFT}` }}
+          >
+            <span className="text-xs uppercase tracking-wider" style={{ color: TEXT_FAINT }}>Category</span>
             <span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${catClass}`}>
               {transaction.category || "Other"}
             </span>
@@ -128,9 +170,18 @@ export default function TransactionModal({ transaction, onClose }) {
         <div className="px-5 py-4">
           <button
             onClick={onClose}
-            className="w-full py-2.5 rounded-xl border border-slate-700
-                       text-slate-400 hover:text-slate-200 hover:bg-slate-800
-                       text-sm font-medium transition-colors"
+            className="w-full py-2.5 rounded-xl text-sm font-medium transition-colors duration-200"
+            style={{ border: `1px solid ${BORDER_SOFT}`, color: TEXT_FAINT }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = TEXT_DIM;
+              e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.03)";
+              e.currentTarget.style.borderColor = `${GOLD}40`;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = TEXT_FAINT;
+              e.currentTarget.style.backgroundColor = "transparent";
+              e.currentTarget.style.borderColor = BORDER_SOFT;
+            }}
           >
             Close
           </button>
