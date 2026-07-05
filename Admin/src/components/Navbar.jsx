@@ -6,6 +6,16 @@ import { useAuth } from "../hooks/useAuth";
 import { useTheme } from "../hooks/useTheme";
 import { Sun, Moon } from "lucide-react";
 
+const INK        = "#0A0E17";
+const BORDER_SOFT= "#1B202B";
+const GOLD       = "#C9A227";
+const GOLD_SOFT  = "#D9B65A";
+const TEXT       = "#EDEFF3";
+const TEXT_DIM   = "#9AA1B2";
+const TEXT_FAINT = "#5F6678";
+const GREEN      = "#34D399";
+const RED        = "#F87171";
+
 const NAV_LINKS = [
   {
     to: "/dashboard",
@@ -89,29 +99,31 @@ export default function Navbar() {
     navigate("/login", { replace: true });
   };
 
-  const linkClass = (to) =>
-    `relative flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-medium transition-all duration-150 select-none ${
-      pathname === to
-        ? "text-slate-100 bg-blue-500/10 after:absolute after:-bottom-[17px] after:left-3 after:right-3 after:h-0.5 after:bg-blue-500 after:rounded-t"
-        : "text-slate-400 hover:text-slate-100 hover:bg-white/5"
-    }`;
+  const linkStyle = (to) => ({
+    color: pathname === to ? TEXT : TEXT_DIM,
+    backgroundColor: pathname === to ? `${GOLD}14` : "transparent",
+  });
 
   const initials = user?.email ? user.email.slice(0, 2).toUpperCase() : "AK";
 
   return (
     <nav
-      className="bg-[#0f111a] border-b border-white/[0.07] px-6 h-14 flex items-center gap-0 relative"
+      className="px-6 h-14 flex items-center gap-0 relative"
+      style={{ backgroundColor: INK, borderBottom: `1px solid ${BORDER_SOFT}`, fontFamily: "'Inter', sans-serif" }}
     >
       {/* Brand */}
       <div className="flex items-center gap-2.5 mr-8 flex-shrink-0">
-        <div className="w-7 h-7 rounded-md bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center">
-          <svg className="w-4 h-4 fill-white" viewBox="0 0 16 16">
+        <div
+          className="w-7 h-7 rounded-md flex items-center justify-center"
+          style={{ background: `linear-gradient(135deg, ${GOLD} 0%, ${GOLD_SOFT} 100%)` }}
+        >
+          <svg className="w-4 h-4" viewBox="0 0 16 16" style={{ fill: INK }}>
             <path d="M2 4h12v1.5H2zM3 7h10v1H3zM4 10h8v1H4z" />
-            <rect x="1" y="2" width="14" height="12" rx="2" fill="none" stroke="white" strokeWidth="1.2" />
+            <rect x="1" y="2" width="14" height="12" rx="2" fill="none" stroke={INK} strokeWidth="1.2" />
           </svg>
         </div>
-        <span className="text-slate-200 text-[15px] font-extrabold tracking-wide" style={{ fontFamily: "'Outfit', sans-serif" }}>
-          Bank<span className="text-blue-400">Digitizer</span>
+        <span className="text-[15px] font-extrabold tracking-wide" style={{ fontFamily: "'Fraunces', serif", color: TEXT }}>
+          Bank<span style={{ color: GOLD_SOFT }}>Lens</span>
         </span>
       </div>
 
@@ -119,10 +131,38 @@ export default function Navbar() {
       {user && (
         <div className="hidden md:flex items-center gap-0.5 flex-1">
           {NAV_LINKS.map(({ to, label, icon, badge }) => (
-            <Link key={to} to={to} className={linkClass(to)}>
+            <Link
+              key={to}
+              to={to}
+              className="relative flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-medium transition-all duration-150 select-none"
+              style={linkStyle(to)}
+              onMouseEnter={(e) => {
+                if (pathname !== to) {
+                  e.currentTarget.style.color = TEXT;
+                  e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.04)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (pathname !== to) {
+                  e.currentTarget.style.color = TEXT_DIM;
+                  e.currentTarget.style.backgroundColor = "transparent";
+                }
+              }}
+            >
               {icon}{label}
+              {pathname === to && (
+                <span
+                  className="absolute -bottom-[17px] left-3 right-3 h-0.5 rounded-t"
+                  style={{ backgroundColor: GOLD }}
+                />
+              )}
               {badge && (
-                <span className="ml-0.5 text-[10px] bg-blue-500 text-white px-1.5 py-px rounded-full font-semibold">{badge}</span>
+                <span
+                  className="ml-0.5 text-[10px] px-1.5 py-px rounded-full font-semibold"
+                  style={{ backgroundColor: GOLD, color: INK }}
+                >
+                  {badge}
+                </span>
               )}
             </Link>
           ))}
@@ -135,40 +175,58 @@ export default function Navbar() {
         {/* Theme toggle */}
         <button
           onClick={toggle}
-          className="hidden md:flex items-center justify-center w-8 h-8 rounded-lg border border-white/[0.07] bg-white/[0.02] text-slate-500 hover:text-slate-300 transition-colors"
+          className="hidden md:flex items-center justify-center w-8 h-8 rounded-lg transition-colors duration-150"
+          style={{ border: `1px solid ${BORDER_SOFT}`, backgroundColor: "rgba(255,255,255,0.02)", color: TEXT_FAINT }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = TEXT_DIM)}
+          onMouseLeave={(e) => (e.currentTarget.style.color = TEXT_FAINT)}
           title={isDark ? "Switch to light mode" : "Switch to dark mode"}
         >
           {isDark ? <Sun size={14} /> : <Moon size={14} />}
         </button>
 
-        {user && <div className="hidden md:block w-px h-5 bg-white/[0.07]" />}
+        {user && <div className="hidden md:block w-px h-5" style={{ backgroundColor: BORDER_SOFT }} />}
 
         {/* OCR status */}
         {user && (
-          <div className="hidden md:flex items-center gap-1.5 text-[11px] text-slate-500 border border-white/[0.07] rounded-full px-2.5 py-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-400 shadow-[0_0_0_3px_rgba(74,222,128,0.15)] animate-pulse" />
+          <div
+            className="hidden md:flex items-center gap-1.5 text-[11px] rounded-full px-2.5 py-1"
+            style={{ color: TEXT_FAINT, border: `1px solid ${BORDER_SOFT}` }}
+          >
+            <span
+              className="w-1.5 h-1.5 rounded-full animate-pulse"
+              style={{ backgroundColor: GREEN, boxShadow: `0 0 0 3px ${GREEN}26` }}
+            />
             OCR Ready
           </div>
         )}
 
         {/* Clock */}
         {user && (
-          <span className="hidden md:block text-[11px] text-slate-600 tabular-nums w-[70px] text-right">{time}</span>
+          <span className="hidden md:block text-[11px] tabular-nums w-[70px] text-right" style={{ color: TEXT_FAINT }}>
+            {time}
+          </span>
         )}
 
-        {user && <div className="hidden md:block w-px h-5 bg-white/[0.07]" />}
+        {user && <div className="hidden md:block w-px h-5" style={{ backgroundColor: BORDER_SOFT }} />}
 
         {/* Avatar + email + sign out */}
         {user && (
           <div className="flex items-center gap-2.5">
-            <span className="hidden lg:block text-[11px] text-slate-500 truncate max-w-[140px]">
+            <span className="hidden lg:block text-[11px] truncate max-w-[140px]" style={{ color: TEXT_FAINT }}>
               {user.email}
             </span>
 
             {/* Avatar — click goes to profile */}
             <button
               onClick={() => navigate("/profile")}
-              className="w-8 h-8 rounded-full bg-gradient-to-br from-[#1e3a5f] to-[#1d4ed8] flex items-center justify-center text-[11px] font-semibold text-blue-300 border border-blue-500/30 select-none hover:ring-2 hover:ring-blue-500/40 transition-all"
+              className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-semibold select-none transition-all duration-150"
+              style={{
+                background: `linear-gradient(135deg, ${GOLD}33, ${GOLD}14)`,
+                color: GOLD_SOFT,
+                border: `1px solid ${GOLD}4D`,
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.boxShadow = `0 0 0 3px ${GOLD}33`)}
+              onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "none")}
               title="Profile"
             >
               {initials}
@@ -177,7 +235,16 @@ export default function Navbar() {
             {/* Sign Out */}
             <button
               onClick={handleSignOut}
-              className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 border border-white/[0.07] rounded-md bg-white/[0.02] text-slate-500 text-xs hover:border-red-500/30 hover:text-red-400 transition-all duration-150"
+              className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs transition-all duration-150"
+              style={{ border: `1px solid ${BORDER_SOFT}`, backgroundColor: "rgba(255,255,255,0.02)", color: TEXT_FAINT }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = `${RED}4D`;
+                e.currentTarget.style.color = RED;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = BORDER_SOFT;
+                e.currentTarget.style.color = TEXT_FAINT;
+              }}
               title="Sign out"
             >
               <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" stroke="currentColor" fill="none" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
@@ -191,7 +258,8 @@ export default function Navbar() {
         {/* Mobile hamburger */}
         {user && (
           <button
-            className="md:hidden text-slate-400 hover:text-slate-100 transition-colors"
+            className="md:hidden transition-colors duration-150"
+            style={{ color: TEXT_DIM }}
             onClick={() => setMenuOpen(!menuOpen)}
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24" stroke="currentColor" fill="none" strokeWidth={1.8} strokeLinecap="round">
@@ -206,33 +274,48 @@ export default function Navbar() {
 
       {/* Mobile drawer */}
       {user && menuOpen && (
-        <div className="md:hidden absolute top-14 left-0 right-0 bg-[#0f111a] border-b border-white/[0.07] z-50 px-4 py-3 flex flex-col gap-1">
+        <div
+          className="md:hidden absolute top-14 left-0 right-0 z-50 px-4 py-3 flex flex-col gap-1"
+          style={{ backgroundColor: INK, borderBottom: `1px solid ${BORDER_SOFT}` }}
+        >
           {NAV_LINKS.map(({ to, label, icon }) => (
             <Link
               key={to} to={to}
-              className={`flex items-center gap-2 px-3 py-2.5 rounded-md text-sm ${
-                pathname === to ? "bg-blue-500/10 text-slate-100" : "text-slate-400"
-              }`}
+              className="flex items-center gap-2 px-3 py-2.5 rounded-md text-sm"
+              style={{
+                backgroundColor: pathname === to ? `${GOLD}14` : "transparent",
+                color: pathname === to ? TEXT : TEXT_DIM,
+              }}
               onClick={() => setMenuOpen(false)}
             >
               {icon}{label}
             </Link>
           ))}
-          <Link to="/profile" className="flex items-center gap-2 px-3 py-2.5 rounded-md text-sm text-slate-400" onClick={() => setMenuOpen(false)}>
+          <Link
+            to="/profile"
+            className="flex items-center gap-2 px-3 py-2.5 rounded-md text-sm"
+            style={{ color: TEXT_DIM }}
+            onClick={() => setMenuOpen(false)}
+          >
             <svg viewBox="0 0 24 24" className="w-4 h-4" stroke="currentColor" fill="none" strokeWidth={1.8} strokeLinecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z"/></svg>
             Profile
           </Link>
           <button
             onClick={() => { setMenuOpen(false); handleSignOut(); }}
-            className="flex items-center gap-2 px-3 py-2.5 rounded-md text-sm text-red-400 hover:bg-red-500/10 transition-colors"
+            className="flex items-center gap-2 px-3 py-2.5 rounded-md text-sm transition-colors duration-150"
+            style={{ color: RED }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `${RED}1A`)}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
           >
             <svg viewBox="0 0 24 24" className="w-4 h-4" stroke="currentColor" fill="none" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
             </svg>
             Sign Out
           </button>
-          <div className="mt-2 pt-2 border-t border-white/[0.07] flex items-center justify-between text-xs text-slate-600">
-            <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-green-400" /> OCR Ready</span>
+          <div className="mt-2 pt-2 flex items-center justify-between text-xs" style={{ borderTop: `1px solid ${BORDER_SOFT}`, color: TEXT_FAINT }}>
+            <span className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: GREEN }} /> OCR Ready
+            </span>
             <span className="tabular-nums">{time}</span>
           </div>
         </div>
