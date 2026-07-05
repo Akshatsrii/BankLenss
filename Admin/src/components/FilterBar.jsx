@@ -12,6 +12,15 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Search, Calendar, ChevronDown } from "lucide-react";
 
+const INK        = "#0A0E17";
+const SURFACE    = "#12161F";
+const BORDER     = "#1F2530";
+const BORDER_SOFT= "#1B202B";
+const GOLD       = "#C9A227";
+const GOLD_SOFT  = "#D9B65A";
+const TEXT       = "#EDEFF3";
+const TEXT_FAINT = "#5F6678";
+
 const CATEGORIES = [
   "all", "Salary", "Food", "Rent", "Utility",
   "Shopping", "Transport", "ATM", "Investment",
@@ -21,7 +30,10 @@ const CATEGORIES = [
 function InputWrapper({ label, children }) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+      <label
+        className="text-[11px] font-medium uppercase tracking-wider"
+        style={{ color: GOLD_SOFT }}
+      >
         {label}
       </label>
       {children}
@@ -29,11 +41,16 @@ function InputWrapper({ label, children }) {
   );
 }
 
+const inputBaseStyle = {
+  backgroundColor: INK,
+  border: `1px solid ${BORDER_SOFT}`,
+  color: TEXT,
+  colorScheme: "dark",
+};
+
 const inputClass = `
-  w-full bg-slate-900 border border-slate-700 rounded-lg
-  px-3 py-2 text-sm text-slate-200 placeholder-slate-600
-  outline-none focus:border-blue-500 focus:ring-1
-  focus:ring-blue-500/30 transition-colors
+  w-full rounded-lg px-3 py-2 text-sm
+  outline-none transition-colors duration-200
   disabled:opacity-50
 `;
 
@@ -69,8 +86,20 @@ export default function FilterBar({ filters, onFilterChange, disabled }) {
     }
   }, [onFilterChange]);
 
+  const focusRing = (e) => {
+    e.currentTarget.style.borderColor = `${GOLD}66`;
+    e.currentTarget.style.boxShadow = `0 0 0 3px ${GOLD}22`;
+  };
+  const blurRing = (e) => {
+    e.currentTarget.style.borderColor = BORDER_SOFT;
+    e.currentTarget.style.boxShadow = "none";
+  };
+
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+    <div
+      className="rounded-2xl p-5"
+      style={{ backgroundColor: SURFACE, border: `1px solid ${BORDER}`, fontFamily: "'Inter', sans-serif" }}
+    >
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 
         {/* Date From */}
@@ -78,8 +107,8 @@ export default function FilterBar({ filters, onFilterChange, disabled }) {
           <div className="relative">
             <Calendar
               size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2
-                         text-slate-500 pointer-events-none"
+              className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+              style={{ color: TEXT_FAINT }}
             />
             <input
               type="date"
@@ -88,7 +117,9 @@ export default function FilterBar({ filters, onFilterChange, disabled }) {
               onChange={(e) => onFilterChange("from", e.target.value)}
               disabled={disabled}
               className={`${inputClass} pl-8`}
-              style={{ colorScheme: "dark" }}
+              style={inputBaseStyle}
+              onFocus={focusRing}
+              onBlur={blurRing}
             />
           </div>
         </InputWrapper>
@@ -98,8 +129,8 @@ export default function FilterBar({ filters, onFilterChange, disabled }) {
           <div className="relative">
             <Calendar
               size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2
-                         text-slate-500 pointer-events-none"
+              className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+              style={{ color: TEXT_FAINT }}
             />
             <input
               type="date"
@@ -108,7 +139,9 @@ export default function FilterBar({ filters, onFilterChange, disabled }) {
               onChange={(e) => onFilterChange("to", e.target.value)}
               disabled={disabled}
               className={`${inputClass} pl-8`}
-              style={{ colorScheme: "dark" }}
+              style={inputBaseStyle}
+              onFocus={focusRing}
+              onBlur={blurRing}
             />
           </div>
         </InputWrapper>
@@ -121,6 +154,9 @@ export default function FilterBar({ filters, onFilterChange, disabled }) {
               onChange={(e) => onFilterChange("type", e.target.value)}
               disabled={disabled}
               className={`${inputClass} appearance-none pr-8 cursor-pointer`}
+              style={inputBaseStyle}
+              onFocus={focusRing}
+              onBlur={blurRing}
             >
               <option value="all">All Transactions</option>
               <option value="debit">Debit Only</option>
@@ -128,8 +164,8 @@ export default function FilterBar({ filters, onFilterChange, disabled }) {
             </select>
             <ChevronDown
               size={14}
-              className="absolute right-3 top-1/2 -translate-y-1/2
-                         text-slate-500 pointer-events-none"
+              className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
+              style={{ color: TEXT_FAINT }}
             />
           </div>
         </InputWrapper>
@@ -142,6 +178,9 @@ export default function FilterBar({ filters, onFilterChange, disabled }) {
               onChange={(e) => onFilterChange("category", e.target.value)}
               disabled={disabled}
               className={`${inputClass} appearance-none pr-8 cursor-pointer`}
+              style={inputBaseStyle}
+              onFocus={focusRing}
+              onBlur={blurRing}
             >
               {CATEGORIES.map((c) => (
                 <option key={c} value={c}>
@@ -151,8 +190,8 @@ export default function FilterBar({ filters, onFilterChange, disabled }) {
             </select>
             <ChevronDown
               size={14}
-              className="absolute right-3 top-1/2 -translate-y-1/2
-                         text-slate-500 pointer-events-none"
+              className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
+              style={{ color: TEXT_FAINT }}
             />
           </div>
         </InputWrapper>
@@ -160,8 +199,10 @@ export default function FilterBar({ filters, onFilterChange, disabled }) {
         {/* Min Amount */}
         <InputWrapper label="Min Amount (₹)">
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2
-                             text-slate-500 text-sm pointer-events-none">
+            <span
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-sm pointer-events-none"
+              style={{ color: TEXT_FAINT }}
+            >
               ₹
             </span>
             <input
@@ -173,6 +214,9 @@ export default function FilterBar({ filters, onFilterChange, disabled }) {
               onChange={(e) => handleAmountChange("minAmount", e.target.value)}
               disabled={disabled}
               className={`${inputClass} pl-7`}
+              style={inputBaseStyle}
+              onFocus={focusRing}
+              onBlur={blurRing}
             />
           </div>
         </InputWrapper>
@@ -180,8 +224,10 @@ export default function FilterBar({ filters, onFilterChange, disabled }) {
         {/* Max Amount */}
         <InputWrapper label="Max Amount (₹)">
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2
-                             text-slate-500 text-sm pointer-events-none">
+            <span
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-sm pointer-events-none"
+              style={{ color: TEXT_FAINT }}
+            >
               ₹
             </span>
             <input
@@ -193,6 +239,9 @@ export default function FilterBar({ filters, onFilterChange, disabled }) {
               onChange={(e) => handleAmountChange("maxAmount", e.target.value)}
               disabled={disabled}
               className={`${inputClass} pl-7`}
+              style={inputBaseStyle}
+              onFocus={focusRing}
+              onBlur={blurRing}
             />
           </div>
         </InputWrapper>
@@ -202,8 +251,8 @@ export default function FilterBar({ filters, onFilterChange, disabled }) {
           <div className="relative">
             <Search
               size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2
-                         text-slate-500 pointer-events-none"
+              className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+              style={{ color: TEXT_FAINT }}
             />
             <input
               type="text"
@@ -212,6 +261,9 @@ export default function FilterBar({ filters, onFilterChange, disabled }) {
               onChange={(e) => handleSearchChange(e.target.value)}
               disabled={disabled}
               className={`${inputClass} pl-8`}
+              style={inputBaseStyle}
+              onFocus={focusRing}
+              onBlur={blurRing}
             />
           </div>
         </InputWrapper>
