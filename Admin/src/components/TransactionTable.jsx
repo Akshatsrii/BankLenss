@@ -28,6 +28,18 @@ import {
   HelpCircle,
 } from "lucide-react";
 
+const INK        = "#0A0E17";
+const SURFACE    = "#12161F";
+const BORDER     = "#1F2530";
+const BORDER_SOFT= "#1B202B";
+const GOLD       = "#C9A227";
+const GOLD_SOFT  = "#D9B65A";
+const TEXT       = "#EDEFF3";
+const TEXT_DIM   = "#9AA1B2";
+const TEXT_FAINT = "#5F6678";
+const GREEN      = "#34D399";
+const RED        = "#F87171";
+
 // ── Amount formatter ───────────────────────────────────────────
 function formatAmount(amount) {
   if (!amount || amount === 0) return "—";
@@ -40,12 +52,12 @@ function formatAmount(amount) {
 // ── Skeleton row ───────────────────────────────────────────────
 function SkeletonRow() {
   return (
-    <tr className="border-b border-slate-800">
+    <tr style={{ borderBottom: `1px solid ${BORDER_SOFT}` }}>
       {[40, 140, 90, 90, 90, 60, 80].map((w, i) => (
         <td key={i} className="px-4 py-3.5">
           <div
-            className="h-3.5 bg-slate-800 rounded animate-pulse"
-            style={{ width: w }}
+            className="h-3.5 rounded animate-pulse"
+            style={{ width: w, backgroundColor: BORDER }}
           />
         </td>
       ))}
@@ -55,17 +67,28 @@ function SkeletonRow() {
 
 // ── Page number button ─────────────────────────────────────────
 function PageBtn({ p, current, onPageChange, disabled }) {
+  const isCurrent = p === current;
   return (
     <button
       onClick={() => onPageChange(p)}
       disabled={disabled}
-      className={`min-w-[32px] h-8 rounded-lg text-sm font-medium
-                  transition-colors disabled:cursor-not-allowed
-                  ${
-                    p === current
-                      ? "bg-blue-600 text-white"
-                      : "text-slate-400 hover:text-slate-200 hover:bg-slate-800"
-                  }`}
+      className="min-w-[32px] h-8 rounded-lg text-sm font-medium transition-colors duration-150 disabled:cursor-not-allowed"
+      style={{
+        backgroundColor: isCurrent ? GOLD : "transparent",
+        color: isCurrent ? INK : TEXT_FAINT,
+      }}
+      onMouseEnter={(e) => {
+        if (!isCurrent) {
+          e.currentTarget.style.color = TEXT_DIM;
+          e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.04)";
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!isCurrent) {
+          e.currentTarget.style.color = TEXT_FAINT;
+          e.currentTarget.style.backgroundColor = "transparent";
+        }
+      }}
     >
       {p}
     </button>
@@ -83,15 +106,18 @@ function Pagination({ page, totalPages, onPageChange, disabled }) {
   const pages = [];
   for (let p = left; p <= right; p++) pages.push(p);
 
+  const navBtnStyle = { color: TEXT_FAINT };
+
   return (
     <div className="flex items-center gap-1">
       {/* Prev */}
       <button
         onClick={() => onPageChange(page - 1)}
         disabled={page <= 1 || disabled}
-        className="p-1.5 rounded-lg text-slate-400 hover:text-slate-200
-                   hover:bg-slate-800 disabled:opacity-30
-                   disabled:cursor-not-allowed transition-colors"
+        className="p-1.5 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150"
+        style={navBtnStyle}
+        onMouseEnter={(e) => { if (page > 1 && !disabled) { e.currentTarget.style.color = TEXT_DIM; e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.04)"; } }}
+        onMouseLeave={(e) => { e.currentTarget.style.color = TEXT_FAINT; e.currentTarget.style.backgroundColor = "transparent"; }}
       >
         <ChevronLeft size={16} />
       </button>
@@ -106,7 +132,7 @@ function Pagination({ page, totalPages, onPageChange, disabled }) {
             disabled={disabled}
           />
           {left > 2 && (
-            <span className="text-slate-600 px-1 text-sm">…</span>
+            <span className="px-1 text-sm" style={{ color: "#3A4152" }}>…</span>
           )}
         </>
       )}
@@ -126,7 +152,7 @@ function Pagination({ page, totalPages, onPageChange, disabled }) {
       {right < totalPages && (
         <>
           {right < totalPages - 1 && (
-            <span className="text-slate-600 px-1 text-sm">…</span>
+            <span className="px-1 text-sm" style={{ color: "#3A4152" }}>…</span>
           )}
           <PageBtn
             p={totalPages}
@@ -141,9 +167,10 @@ function Pagination({ page, totalPages, onPageChange, disabled }) {
       <button
         onClick={() => onPageChange(page + 1)}
         disabled={page >= totalPages || disabled}
-        className="p-1.5 rounded-lg text-slate-400 hover:text-slate-200
-                   hover:bg-slate-800 disabled:opacity-30
-                   disabled:cursor-not-allowed transition-colors"
+        className="p-1.5 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150"
+        style={navBtnStyle}
+        onMouseEnter={(e) => { if (page < totalPages && !disabled) { e.currentTarget.style.color = TEXT_DIM; e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.04)"; } }}
+        onMouseLeave={(e) => { e.currentTarget.style.color = TEXT_FAINT; e.currentTarget.style.backgroundColor = "transparent"; }}
       >
         <ChevronRight size={16} />
       </button>
@@ -180,10 +207,10 @@ export default function TransactionTable({
   if (error) {
     return (
       <div
-        className="rounded-2xl border border-red-500/20 bg-red-500/5
-                   p-8 text-center"
+        className="rounded-2xl p-8 text-center"
+        style={{ border: `1px solid ${RED}30`, backgroundColor: `${RED}0D` }}
       >
-        <p className="text-red-400 text-sm">{error}</p>
+        <p className="text-sm" style={{ color: RED }}>{error}</p>
       </div>
     );
   }
@@ -191,7 +218,10 @@ export default function TransactionTable({
   const showBottomBar = totalPages > 1 || !!onPageSizeChange;
 
   return (
-    <div className="rounded-2xl border border-slate-800 overflow-hidden">
+    <div
+      className="rounded-2xl overflow-hidden"
+      style={{ border: `1px solid ${BORDER}`, fontFamily: "'Inter', sans-serif" }}
+    >
 
       {/* ── Scrollable table ───────────────────────────────── */}
       <div className="overflow-x-auto">
@@ -199,13 +229,12 @@ export default function TransactionTable({
 
           {/* Sticky header */}
           <thead className="sticky top-0 z-10">
-            <tr className="border-b border-slate-800 bg-slate-900">
+            <tr style={{ borderBottom: `1px solid ${BORDER}`, backgroundColor: SURFACE }}>
               {HEADERS.map((h) => (
                 <th
                   key={h.label}
-                  className={`px-4 py-3 text-left text-xs font-semibold
-                              text-slate-500 uppercase tracking-wider
-                              whitespace-nowrap ${h.className}`}
+                  className={`px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider whitespace-nowrap ${h.className}`}
+                  style={{ color: GOLD_SOFT }}
                 >
                   {h.label}
                 </th>
@@ -214,7 +243,7 @@ export default function TransactionTable({
           </thead>
 
           {/* Body */}
-          <tbody className="bg-slate-950 divide-y divide-slate-800/50">
+          <tbody style={{ backgroundColor: INK }}>
 
             {/* Loading skeletons — only when no data yet */}
             {loading && data.length === 0 &&
@@ -227,10 +256,10 @@ export default function TransactionTable({
             {!loading && data.length === 0 && (
               <tr>
                 <td colSpan={HEADERS.length} className="px-4 py-16 text-center">
-                  <p className="text-slate-500 text-sm">
+                  <p className="text-sm" style={{ color: TEXT_FAINT }}>
                     No transactions found for these filters.
                   </p>
-                  <p className="text-slate-600 text-xs mt-1">
+                  <p className="text-xs mt-1" style={{ color: "#3A4152" }}>
                     Try adjusting the date range or removing some filters.
                   </p>
                 </td>
@@ -241,16 +270,21 @@ export default function TransactionTable({
             {data.map((t, i) => (
               <tr
                 key={t.transactionId || i}
-                className="hover:bg-slate-900/40 transition-colors"
+                className="transition-colors duration-150"
+                style={{ borderBottom: `1px solid ${BORDER_SOFT}` }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.02)")}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
               >
                 {/* Date */}
-                <td className="px-4 py-3.5 text-slate-400
-                               whitespace-nowrap font-mono text-xs">
+                <td
+                  className="px-4 py-3.5 whitespace-nowrap font-mono text-xs"
+                  style={{ color: TEXT_FAINT }}
+                >
                   {t.date}
                 </td>
 
                 {/* Description */}
-                <td className="px-4 py-3.5 text-slate-200 max-w-[280px]">
+                <td className="px-4 py-3.5 max-w-[280px]" style={{ color: TEXT }}>
                   <p className="truncate" title={t.description}>
                     {t.description}
                   </p>
@@ -259,30 +293,29 @@ export default function TransactionTable({
                 {/* Debit */}
                 <td className="px-4 py-3.5 whitespace-nowrap">
                   {t.debit > 0 ? (
-                    <span className="text-red-400 font-mono text-xs">
+                    <span className="font-mono text-xs" style={{ color: RED }}>
                       {formatAmount(t.debit)}
                     </span>
                   ) : (
-                    <span className="text-slate-700">—</span>
+                    <span style={{ color: "#3A4152" }}>—</span>
                   )}
                 </td>
 
                 {/* Credit */}
                 <td className="px-4 py-3.5 whitespace-nowrap">
                   {t.credit > 0 ? (
-                    <span className="text-green-400 font-mono text-xs">
+                    <span className="font-mono text-xs" style={{ color: GREEN }}>
                       {formatAmount(t.credit)}
                     </span>
                   ) : (
-                    <span className="text-slate-700">—</span>
+                    <span style={{ color: "#3A4152" }}>—</span>
                   )}
                 </td>
 
                 {/* Balance — hidden on mobile */}
                 <td
-                  className="px-4 py-3.5 whitespace-nowrap
-                             text-slate-400 font-mono text-xs
-                             hidden md:table-cell"
+                  className="px-4 py-3.5 whitespace-nowrap font-mono text-xs hidden md:table-cell"
+                  style={{ color: TEXT_FAINT }}
                 >
                   {formatAmount(t.balance)}
                 </td>
@@ -290,13 +323,11 @@ export default function TransactionTable({
                 {/* Type badge — hidden on small screens */}
                 <td className="px-4 py-3.5 hidden sm:table-cell">
                   <div
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-1
-                                rounded-full text-xs font-medium
-                                ${
-                                  t.type === "credit"
-                                    ? "bg-green-500/10 text-green-400"
-                                    : "bg-red-500/10  text-red-400"
-                                }`}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
+                    style={{
+                      backgroundColor: t.type === "credit" ? `${GREEN}1A` : `${RED}1A`,
+                      color: t.type === "credit" ? GREEN : RED,
+                    }}
                   >
                     {t.type === "credit" ? (
                       <ArrowUpCircle size={11} />
@@ -312,10 +343,10 @@ export default function TransactionTable({
                   {t.status === "matched" ? (
                     <button
                       onClick={() => onShowMatchDetails && onShowMatchDetails(t)}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1
-                                 rounded-full text-xs font-semibold
-                                 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20
-                                 hover:bg-emerald-500/20 transition-all select-none"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-all duration-150 select-none"
+                      style={{ backgroundColor: `${GREEN}14`, color: GREEN, border: `1px solid ${GREEN}30` }}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `${GREEN}22`)}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = `${GREEN}14`)}
                     >
                       <CheckCircle size={11} />
                       Matched
@@ -323,10 +354,10 @@ export default function TransactionTable({
                   ) : (
                     <button
                       onClick={() => onCreateQuickMatch && onCreateQuickMatch(t)}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1
-                                 rounded-full text-xs font-semibold
-                                 bg-amber-500/10 text-amber-400 border border-amber-500/20
-                                 hover:bg-amber-500/20 transition-all select-none"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-all duration-150 select-none"
+                      style={{ backgroundColor: `${GOLD}14`, color: GOLD_SOFT, border: `1px solid ${GOLD}30` }}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `${GOLD}22`)}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = `${GOLD}14`)}
                       title="Click to quickly match / create ledger record"
                     >
                       <HelpCircle size={11} />
@@ -343,19 +374,20 @@ export default function TransactionTable({
       {/* ── Bottom bar: page size + count + pagination ─────── */}
       {showBottomBar && (
         <div
-          className="border-t border-slate-800 px-4 py-3 bg-slate-900/50
-                     flex items-center justify-between gap-4 flex-wrap"
+          className="px-4 py-3 flex items-center justify-between gap-4 flex-wrap"
+          style={{ borderTop: `1px solid ${BORDER}`, backgroundColor: `${SURFACE}80` }}
         >
           {/* Page size selector */}
           {onPageSizeChange && (
-            <div className="flex items-center gap-2 text-sm text-slate-400">
+            <div className="flex items-center gap-2 text-sm" style={{ color: TEXT_FAINT }}>
               <span>Rows per page:</span>
               <select
                 value={pageSize}
                 onChange={(e) => onPageSizeChange(Number(e.target.value))}
-                className="bg-slate-800 border border-slate-700 rounded-lg
-                           px-2 py-1 text-sm text-slate-200 outline-none
-                           focus:border-blue-500 cursor-pointer"
+                className="rounded-lg px-2 py-1 text-sm outline-none cursor-pointer transition-colors duration-150"
+                style={{ backgroundColor: INK, border: `1px solid ${BORDER_SOFT}`, color: TEXT }}
+                onFocus={(e) => (e.currentTarget.style.borderColor = `${GOLD}66`)}
+                onBlur={(e) => (e.currentTarget.style.borderColor = BORDER_SOFT)}
               >
                 {[10, 25, 50, 100, 250, 500, 1000].map((n) => (
                   <option key={n} value={n}>
@@ -367,7 +399,7 @@ export default function TransactionTable({
           )}
 
           {/* Total count */}
-          <span className="text-xs text-slate-500">
+          <span className="text-xs" style={{ color: TEXT_FAINT }}>
             {total} transaction{total !== 1 ? "s" : ""}
           </span>
 
