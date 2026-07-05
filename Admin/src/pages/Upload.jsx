@@ -3,6 +3,7 @@ import { ref, uploadBytesResumable } from "firebase/storage";
 import { httpsCallable } from "firebase/functions";
 import { getAuth } from "firebase/auth";
 import { storage, functions } from "../firebase";
+import { UploadCloud as UploadCloudIcon, FileText, Landmark } from "lucide-react";
 
 const ACCEPTED = ["application/pdf"];
 const MAX_MB = 20;
@@ -33,6 +34,26 @@ function friendlyError(err) {
     "internal";
   return ERROR_MESSAGES[code] || err?.message || ERROR_MESSAGES.internal;
 }
+
+const INK        = "#0A0E17";
+const SURFACE    = "#12161F";
+const BORDER     = "#1F2530";
+const BORDER_SOFT= "#1B202B";
+const GOLD       = "#C9A227";
+const GOLD_SOFT  = "#D9B65A";
+const TEXT       = "#EDEFF3";
+const TEXT_DIM   = "#9AA1B2";
+const TEXT_FAINT = "#5F6678";
+const GREEN      = "#34D399";
+const RED        = "#F87171";
+const YELLOW     = "#D9B65A";
+
+const FONT_STACK = `
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
+  @keyframes fadeUp    { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes floatSlow { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-5px); } }
+  @keyframes popIn     { from { opacity: 0; transform: scale(0.96) translateY(4px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+`;
 
 function FileIcon() {
   return (
@@ -192,342 +213,410 @@ export default function Upload() {
 
   return (
     <div
-      className="min-h-screen bg-[#0A0E17] text-slate-300 px-6 py-8 font-sans"
+      className="min-h-screen px-6 py-8 font-sans relative overflow-hidden"
+      style={{ backgroundColor: INK, color: TEXT_DIM, fontFamily: "'Inter', sans-serif" }}
     >
-      {/* Header */}
-      <div className="mb-8">
-        <p className="text-[11px] text-slate-600 uppercase tracking-widest mb-1 font-semibold">
-          OCR Pipeline
-        </p>
-        <h1
-          className="text-2xl font-bold text-white tracking-tight"
-          style={{ fontFamily: "'Outfit', sans-serif" }}
+      <style>{FONT_STACK}</style>
+
+      {/* Ambient glow accents */}
+      <div
+        className="absolute -top-24 -right-24 w-[26rem] h-[26rem] rounded-full pointer-events-none"
+        style={{ background: `radial-gradient(circle, ${GOLD}12, transparent 70%)` }}
+      />
+      <div
+        className="absolute bottom-0 -left-32 w-80 h-80 rounded-full pointer-events-none"
+        style={{ background: `radial-gradient(circle, #60A5FA0D, transparent 70%)` }}
+      />
+
+      {/* Centered content wrapper — everything lives inside this */}
+      <div className="max-w-4xl mx-auto relative">
+
+        {/* Header */}
+        <div
+          className="mb-8 flex items-center gap-3 justify-center text-center flex-col"
+          style={{ animation: "fadeUp 0.45s ease both" }}
         >
-          Upload Statement
-        </h1>
-      </div>
-
-      <div className="grid md:grid-cols-5 gap-4 max-w-4xl">
-
-        {/* ── Left: dropzone + password + controls ── */}
-        <div className="md:col-span-3 flex flex-col gap-4">
-
-          {/* Drop Zone */}
           <div
-            onDrop={onDrop}
-            onDragOver={onDragOver}
-            onDragLeave={onDragLeave}
-            onClick={() => !file && inputRef.current?.click()}
-            className={`relative rounded-xl border-2 border-dashed transition-all duration-200 flex flex-col items-center justify-center text-center
-              ${file
-                ? "cursor-default border-white/[0.06] bg-[#0f111a] py-6"
-                : dragging
-                  ? "border-blue-500/60 bg-blue-500/5 py-16 cursor-pointer"
-                  : "border-white/[0.08] hover:border-white/20 bg-[#0f111a] py-16 cursor-pointer"
-              }`}
+            className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0"
+            style={{
+              backgroundColor: `${GOLD}1A`,
+              border: `1px solid ${GOLD}40`,
+              animation: "floatSlow 4.5s ease-in-out infinite",
+            }}
           >
-            <input
-              ref={inputRef}
-              type="file"
-              accept=".pdf"
-              className="hidden"
-              onChange={(e) => e.target.files[0] && pickFile(e.target.files[0])}
-            />
-
-            {file ? (
-              <div className="flex items-center gap-4 px-6 w-full">
-                <div className="w-10 h-12 rounded-lg bg-blue-500/10 border border-blue-500/20
-                                flex items-center justify-center text-blue-400 flex-shrink-0">
-                  <FileIcon />
-                </div>
-                <div className="flex-1 min-w-0 text-left">
-                  <p className="text-[13px] text-slate-200 font-medium truncate">
-                    {file.name}
-                  </p>
-                  <p className="text-[11px] text-slate-600 mt-0.5">
-                    {(file.size / 1024 / 1024).toFixed(2)} MB · PDF
-                  </p>
-                </div>
-                {!isRunning && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); reset(); }}
-                    className="text-slate-600 hover:text-slate-300 transition-colors p-1 flex-shrink-0"
-                  >
-                    <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none"
-                      stroke="currentColor" strokeWidth={2}>
-                      <line x1="18" y1="6" x2="6" y2="18"/>
-                      <line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
-                  </button>
-                )}
-              </div>
-            ) : (
-              <>
-                <div className={`mb-4 transition-colors ${dragging ? "text-blue-400" : "text-slate-700"}`}>
-                  <UploadCloud />
-                </div>
-                <p className="text-[13px] text-slate-400 mb-1">
-                  {dragging ? "Drop it here" : "Drag & drop your bank statement"}
-                </p>
-                <p className="text-[11px] text-slate-600">PDF only · Max {MAX_MB} MB</p>
-                <button className="mt-4 text-[11px] text-blue-400 border border-blue-500/30
-                                   hover:border-blue-400/60 px-4 py-1.5 rounded-md transition-colors">
-                  Browse files
-                </button>
-              </>
-            )}
+            <Landmark size={19} style={{ color: GOLD_SOFT }} />
           </div>
-
-          {/* Password field */}
           <div>
-            <label className="block text-[11px] text-slate-600 uppercase tracking-widest mb-2">
-              PDF Password
-            </label>
-            <div className="relative">
-              <input
-                type={showPw ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={isRunning}
-                placeholder="Enter PDF password (if protected)"
-                className="w-full bg-[#0f111a] border border-white/[0.08] rounded-xl
-                           px-4 py-3 pr-11 text-[13px] text-slate-200
-                           placeholder-slate-700 outline-none
-                           focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20
-                           disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPw((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2
-                           text-slate-600 hover:text-slate-400 transition-colors"
-              >
-                {showPw ? (
-                  <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none"
-                    stroke="currentColor" strokeWidth={1.8}>
-                    <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/>
-                    <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/>
-                    <line x1="1" y1="1" x2="23" y2="23"/>
-                  </svg>
-                ) : (
-                  <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none"
-                    stroke="currentColor" strokeWidth={1.8}>
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                    <circle cx="12" cy="12" r="3"/>
-                  </svg>
-                )}
-              </button>
-            </div>
-            <p className="text-[10px] text-slate-700 mt-1.5">
-              Leave blank if the PDF is not password-protected.
+            <p className="text-[11px] uppercase tracking-widest mb-1 font-semibold" style={{ color: GOLD_SOFT }}>
+              OCR Pipeline
             </p>
+            <h1
+              className="text-2xl font-semibold tracking-tight"
+              style={{ fontFamily: "'Fraunces', serif", color: TEXT }}
+            >
+              Upload Statement
+            </h1>
           </div>
-
-          {/* Error */}
-          {error && (
-            <div className="flex items-start gap-2 bg-red-500/8 border border-red-500/20
-                            rounded-lg px-4 py-3 text-[12px] text-red-400">
-              <svg viewBox="0 0 24 24" className="w-4 h-4 flex-shrink-0 mt-0.5" fill="none"
-                stroke="currentColor" strokeWidth={2}>
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="12" y1="8" x2="12" y2="12"/>
-                <line x1="12" y1="16" x2="12.01" y2="16"/>
-              </svg>
-              {error}
-            </div>
-          )}
-
-          {/* Warnings (scanned page, etc.) */}
-          {warnings.length > 0 && (
-            <div className="flex items-start gap-2 bg-yellow-500/8 border border-yellow-500/20
-                            rounded-lg px-4 py-3 text-[12px] text-yellow-400">
-              <svg viewBox="0 0 24 24" className="w-4 h-4 flex-shrink-0 mt-0.5" fill="none"
-                stroke="currentColor" strokeWidth={2}>
-                <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-                <line x1="12" y1="9" x2="12" y2="13"/>
-                <line x1="12" y1="17" x2="12.01" y2="17"/>
-              </svg>
-              <div className="space-y-1">
-                {warnings.map((w, i) => <p key={i}>{w}</p>)}
-              </div>
-            </div>
-          )}
-
-          {/* Upload progress bar (step 1) */}
-          {step === 1 && (
-            <div>
-              <div className="flex justify-between text-[10px] text-slate-600 mb-1.5">
-                <span>Uploading to Storage</span>
-                <span>{progress}%</span>
-              </div>
-              <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-blue-500 rounded-full transition-all duration-200"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Process button */}
-          <button
-            onClick={runPipeline}
-            disabled={!file || isRunning}
-            className={`w-full py-3 rounded-xl text-[13px] font-medium flex items-center
-                        justify-center gap-2 transition-all duration-200
-              ${!file || isRunning
-                ? "bg-white/5 border border-white/[0.06] text-slate-600 cursor-not-allowed"
-                : "bg-blue-500 hover:bg-blue-400 text-white border border-blue-500"
-              }`}
-          >
-            {isRunning ? (
-              <>
-                <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" strokeWidth={2}>
-                  <circle cx="12" cy="12" r="10" strokeOpacity="0.2"/>
-                  <path d="M12 2a10 10 0 0110 10"/>
-                </svg>
-                Processing…
-              </>
-            ) : isDone ? (
-              <>
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" strokeWidth={2}>
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
-                Upload Another
-              </>
-            ) : (
-              <>
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" strokeWidth={2}>
-                  <polygon points="5 3 19 12 5 21 5 3"/>
-                </svg>
-                Run OCR Pipeline
-              </>
-            )}
-          </button>
-
-          {/* Success result */}
-          {result && (
-            <div className="bg-[#0f111a] border border-emerald-500/20 rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <p className="text-[11px] text-emerald-400 uppercase tracking-wider">
-                  Statement Processed
-                </p>
-              </div>
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-[12px]">
-                  <span className="text-slate-600">Bank</span>
-                  <span className="text-slate-200 font-medium">{result.bank}</span>
-                </div>
-                <div className="flex justify-between text-[12px]">
-                  <span className="text-slate-600">Transactions</span>
-                  <span className="text-emerald-400 font-medium">
-                    {result.transactionCount} extracted
-                  </span>
-                </div>
-                <div className="flex justify-between text-[12px]">
-                  <span className="text-slate-600">Statement ID</span>
-                  <span className="text-slate-500 font-mono text-[10px] truncate max-w-[160px]">
-                    {result.statementId}
-                  </span>
-                </div>
-              </div>
-              <a
-                href="/transactions"
-                className="mt-4 flex items-center justify-center gap-2 w-full py-2
-                           rounded-lg border border-blue-500/20 text-blue-400
-                           hover:bg-blue-500/10 transition-colors text-[12px]"
-              >
-                View Transactions →
-              </a>
-            </div>
-          )}
         </div>
 
-        {/* ── Right: pipeline steps ── */}
-        <div className="md:col-span-2 bg-[#0f111a] border border-white/[0.06]
-                        rounded-xl p-5 h-fit">
-          <p className="text-[11px] text-slate-600 uppercase tracking-widest mb-5">
-            Pipeline
-          </p>
+        <div className="grid md:grid-cols-5 gap-4">
 
-          <div className="space-y-0">
-            {STEPS.map((s, i) => {
-              const idx     = i + 1;
-              const done    = step > idx || isDone;
-              const active  = step === idx;
-              const pending = !done && !active;
+          {/* ── Left: dropzone + password + controls ── */}
+          <div
+            className="md:col-span-3 flex flex-col gap-4"
+            style={{ animation: "fadeUp 0.5s ease both", animationDelay: "80ms" }}
+          >
 
-              return (
-                <div key={s.id} className="flex gap-3">
-                  {/* Step circle + connector */}
-                  <div className="flex flex-col items-center">
-                    <div className={`w-6 h-6 rounded-full border flex items-center justify-center
-                                    flex-shrink-0 text-[10px] transition-all duration-300
-                      ${done
-                        ? "border-emerald-500 bg-emerald-500/20 text-emerald-400"
-                        : active
-                          ? "border-blue-500 bg-blue-500/20 text-blue-400"
-                          : "border-white/10 text-slate-700"
-                      }`}>
-                      {done ? (
-                        <svg viewBox="0 0 24 24" className="w-3 h-3" fill="none"
-                          stroke="currentColor" strokeWidth={2.5}>
-                          <polyline points="20 6 9 17 4 12"/>
-                        </svg>
-                      ) : active ? (
-                        <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
-                      ) : (
-                        <span className="font-mono">{idx}</span>
-                      )}
-                    </div>
-                    {i < STEPS.length - 1 && (
-                      <div className={`w-px flex-1 my-1 min-h-[20px] transition-colors duration-500
-                        ${done ? "bg-emerald-500/30" : "bg-white/[0.05]"}`}
-                      />
-                    )}
+            {/* Drop Zone */}
+            <div
+              onDrop={onDrop}
+              onDragOver={onDragOver}
+              onDragLeave={onDragLeave}
+              onClick={() => !file && inputRef.current?.click()}
+              className="relative rounded-xl border-2 border-dashed transition-all duration-200 flex flex-col items-center justify-center text-center"
+              style={{
+                backgroundColor: SURFACE,
+                borderColor: file ? BORDER : dragging ? `${GOLD}88` : BORDER,
+                ...(dragging && !file ? { backgroundColor: `${GOLD}0D` } : {}),
+                paddingTop: file ? "24px" : "64px",
+                paddingBottom: file ? "24px" : "64px",
+                cursor: file ? "default" : "pointer",
+              }}
+              onMouseEnter={(e) => { if (!file && !dragging) e.currentTarget.style.borderColor = "#2A3040"; }}
+              onMouseLeave={(e) => { if (!file && !dragging) e.currentTarget.style.borderColor = BORDER; }}
+            >
+              <input
+                ref={inputRef}
+                type="file"
+                accept=".pdf"
+                className="hidden"
+                onChange={(e) => e.target.files[0] && pickFile(e.target.files[0])}
+              />
+
+              {file ? (
+                <div className="flex items-center gap-4 px-6 w-full">
+                  <div
+                    className="w-10 h-12 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: `${GOLD}14`, border: `1px solid ${GOLD}33`, color: GOLD_SOFT }}
+                  >
+                    <FileIcon />
                   </div>
-
-                  {/* Label */}
-                  <div className="pb-5">
-                    <p className={`text-[12px] font-medium transition-colors duration-300
-                      ${done    ? "text-emerald-400"
-                      : active  ? "text-blue-300"
-                      :           "text-slate-600"}`}>
-                      {s.label}
+                  <div className="flex-1 min-w-0 text-left">
+                    <p className="text-[13px] font-medium truncate" style={{ color: TEXT }}>
+                      {file.name}
                     </p>
-                    {active && (
-                      <p className="text-[10px] text-slate-700 mt-0.5">In progress…</p>
-                    )}
-                    {done && (
-                      <p className="text-[10px] text-slate-700 mt-0.5">Completed</p>
-                    )}
+                    <p className="text-[11px] mt-0.5" style={{ color: TEXT_FAINT }}>
+                      {(file.size / 1024 / 1024).toFixed(2)} MB · PDF
+                    </p>
+                  </div>
+                  {!isRunning && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); reset(); }}
+                      className="transition-colors p-1 flex-shrink-0"
+                      style={{ color: TEXT_FAINT }}
+                      onMouseEnter={(e) => (e.currentTarget.style.color = TEXT_DIM)}
+                      onMouseLeave={(e) => (e.currentTarget.style.color = TEXT_FAINT)}
+                    >
+                      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none"
+                        stroke="currentColor" strokeWidth={2}>
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <div className="mb-4 transition-colors" style={{ color: dragging ? GOLD_SOFT : "#3A4152" }}>
+                    <UploadCloud />
+                  </div>
+                  <p className="text-[13px] mb-1" style={{ color: TEXT_DIM }}>
+                    {dragging ? "Drop it here" : "Drag & drop your bank statement"}
+                  </p>
+                  <p className="text-[11px]" style={{ color: TEXT_FAINT }}>PDF only · Max {MAX_MB} MB</p>
+                  <button
+                    className="mt-4 text-[11px] px-4 py-1.5 rounded-md transition-colors"
+                    style={{ color: GOLD_SOFT, border: `1px solid ${GOLD}33` }}
+                    onMouseEnter={(e) => (e.currentTarget.style.borderColor = `${GOLD}66`)}
+                    onMouseLeave={(e) => (e.currentTarget.style.borderColor = `${GOLD}33`)}
+                  >
+                    Browse files
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* Password field */}
+            <div>
+              <label className="block text-[11px] uppercase tracking-widest mb-2" style={{ color: TEXT_FAINT }}>
+                PDF Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showPw ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={isRunning}
+                  placeholder="Enter PDF password (if protected)"
+                  className="w-full rounded-xl px-4 py-3 pr-11 text-[13px] outline-none
+                             disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  style={{ backgroundColor: SURFACE, border: `1px solid ${BORDER}`, color: TEXT }}
+                  onFocus={(e) => (e.target.style.borderColor = GOLD)}
+                  onBlur={(e) => (e.target.style.borderColor = BORDER)}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPw((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
+                  style={{ color: TEXT_FAINT }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = TEXT_DIM)}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = TEXT_FAINT)}
+                >
+                  {showPw ? (
+                    <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none"
+                      stroke="currentColor" strokeWidth={1.8}>
+                      <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/>
+                      <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/>
+                      <line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none"
+                      stroke="currentColor" strokeWidth={1.8}>
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  )}
+                </button>
+              </div>
+              <p className="text-[10px] mt-1.5" style={{ color: "#3A4152" }}>
+                Leave blank if the PDF is not password-protected.
+              </p>
+            </div>
+
+            {/* Error */}
+            {error && (
+              <div
+                className="flex items-start gap-2 rounded-lg px-4 py-3 text-[12px]"
+                style={{ backgroundColor: `${RED}0D`, border: `1px solid ${RED}33`, color: RED, animation: "popIn 0.2s ease both" }}
+              >
+                <svg viewBox="0 0 24 24" className="w-4 h-4 flex-shrink-0 mt-0.5" fill="none"
+                  stroke="currentColor" strokeWidth={2}>
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="8" x2="12" y2="12"/>
+                  <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                {error}
+              </div>
+            )}
+
+            {/* Warnings (scanned page, etc.) */}
+            {warnings.length > 0 && (
+              <div
+                className="flex items-start gap-2 rounded-lg px-4 py-3 text-[12px]"
+                style={{ backgroundColor: `${YELLOW}0D`, border: `1px solid ${YELLOW}33`, color: YELLOW, animation: "popIn 0.2s ease both" }}
+              >
+                <svg viewBox="0 0 24 24" className="w-4 h-4 flex-shrink-0 mt-0.5" fill="none"
+                  stroke="currentColor" strokeWidth={2}>
+                  <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                  <line x1="12" y1="9" x2="12" y2="13"/>
+                  <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                <div className="space-y-1">
+                  {warnings.map((w, i) => <p key={i}>{w}</p>)}
+                </div>
+              </div>
+            )}
+
+            {/* Upload progress bar (step 1) */}
+            {step === 1 && (
+              <div>
+                <div className="flex justify-between text-[10px] mb-1.5" style={{ color: TEXT_FAINT }}>
+                  <span>Uploading to Storage</span>
+                  <span style={{ fontFamily: "'IBM Plex Mono', monospace" }}>{progress}%</span>
+                </div>
+                <div className="h-1 rounded-full overflow-hidden" style={{ backgroundColor: BORDER_SOFT }}>
+                  <div
+                    className="h-full rounded-full transition-all duration-200"
+                    style={{ width: `${progress}%`, background: `linear-gradient(90deg, ${GOLD}CC, ${GOLD})` }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Process button */}
+            <button
+              onClick={runPipeline}
+              disabled={!file || isRunning}
+              className="w-full py-3 rounded-xl text-[13px] font-medium flex items-center
+                         justify-center gap-2 transition-all duration-200"
+              style={
+                !file || isRunning
+                  ? { backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.06)", color: "#3A4152", cursor: "not-allowed" }
+                  : { backgroundColor: GOLD, color: INK, border: `1px solid ${GOLD}` }
+              }
+              onMouseEnter={(e) => { if (file && !isRunning) e.currentTarget.style.backgroundColor = GOLD_SOFT; }}
+              onMouseLeave={(e) => { if (file && !isRunning) e.currentTarget.style.backgroundColor = GOLD; }}
+            >
+              {isRunning ? (
+                <>
+                  <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" strokeWidth={2}>
+                    <circle cx="12" cy="12" r="10" strokeOpacity="0.2"/>
+                    <path d="M12 2a10 10 0 0110 10"/>
+                  </svg>
+                  Processing…
+                </>
+              ) : isDone ? (
+                <>
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" strokeWidth={2}>
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  Upload Another
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" strokeWidth={2}>
+                    <polygon points="5 3 19 12 5 21 5 3"/>
+                  </svg>
+                  Run OCR Pipeline
+                </>
+              )}
+            </button>
+
+            {/* Success result */}
+            {result && (
+              <div
+                className="rounded-xl p-4"
+                style={{ backgroundColor: SURFACE, border: `1px solid ${GREEN}33`, animation: "popIn 0.25s ease both" }}
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: GREEN }} />
+                  <p className="text-[11px] uppercase tracking-wider" style={{ color: GREEN }}>
+                    Statement Processed
+                  </p>
+                </div>
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-[12px]">
+                    <span style={{ color: TEXT_FAINT }}>Bank</span>
+                    <span className="font-medium" style={{ color: TEXT }}>{result.bank}</span>
+                  </div>
+                  <div className="flex justify-between text-[12px]">
+                    <span style={{ color: TEXT_FAINT }}>Transactions</span>
+                    <span className="font-medium" style={{ color: GREEN }}>
+                      {result.transactionCount} extracted
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-[12px]">
+                    <span style={{ color: TEXT_FAINT }}>Statement ID</span>
+                    <span className="font-mono text-[10px] truncate max-w-[160px]" style={{ color: TEXT_FAINT }}>
+                      {result.statementId}
+                    </span>
                   </div>
                 </div>
-              );
-            })}
+                <a
+                  href="/transactions"
+                  className="mt-4 flex items-center justify-center gap-2 w-full py-2
+                             rounded-lg transition-colors text-[12px]"
+                  style={{ border: `1px solid ${GOLD}33`, color: GOLD_SOFT }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `${GOLD}14`)}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                >
+                  View Transactions →
+                </a>
+              </div>
+            )}
           </div>
 
-          {/* Supported banks */}
-          <div className="mt-4 pt-4 border-t border-white/[0.05]">
-            <p className="text-[10px] text-slate-700 uppercase tracking-wider mb-2">
-              Supported Banks
+          {/* ── Right: pipeline steps ── */}
+          <div
+            className="md:col-span-2 rounded-xl p-5 h-fit"
+            style={{ backgroundColor: SURFACE, border: `1px solid ${BORDER}`, animation: "fadeUp 0.5s ease both", animationDelay: "160ms" }}
+          >
+            <p className="text-[11px] uppercase tracking-widest mb-5" style={{ color: GOLD_SOFT }}>
+              Pipeline
             </p>
-            <div className="flex gap-1.5 flex-wrap">
-              {["SBI", "HDFC", "ICICI", "Axis"].map((b) => (
-                <span key={b}
-                  className="text-[10px] px-2 py-0.5 rounded border
-                             border-white/[0.06] text-slate-600">
-                  {b}
-                </span>
-              ))}
+
+            <div className="space-y-0">
+              {STEPS.map((s, i) => {
+                const idx     = i + 1;
+                const done    = step > idx || isDone;
+                const active  = step === idx;
+
+                return (
+                  <div key={s.id} className="flex gap-3">
+                    {/* Step circle + connector */}
+                    <div className="flex flex-col items-center">
+                      <div
+                        className="w-6 h-6 rounded-full border flex items-center justify-center
+                                    flex-shrink-0 text-[10px] transition-all duration-300"
+                        style={
+                          done
+                            ? { borderColor: GREEN, backgroundColor: `${GREEN}22`, color: GREEN }
+                            : active
+                            ? { borderColor: GOLD, backgroundColor: `${GOLD}22`, color: GOLD_SOFT }
+                            : { borderColor: "rgba(255,255,255,0.1)", color: "#3A4152" }
+                        }
+                      >
+                        {done ? (
+                          <svg viewBox="0 0 24 24" className="w-3 h-3" fill="none"
+                            stroke="currentColor" strokeWidth={2.5}>
+                            <polyline points="20 6 9 17 4 12"/>
+                          </svg>
+                        ) : active ? (
+                          <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: GOLD_SOFT }} />
+                        ) : (
+                          <span style={{ fontFamily: "'IBM Plex Mono', monospace" }}>{idx}</span>
+                        )}
+                      </div>
+                      {i < STEPS.length - 1 && (
+                        <div
+                          className="w-px flex-1 my-1 min-h-[20px] transition-colors duration-500"
+                          style={{ backgroundColor: done ? `${GREEN}4D` : "rgba(255,255,255,0.05)" }}
+                        />
+                      )}
+                    </div>
+
+                    {/* Label */}
+                    <div className="pb-5">
+                      <p
+                        className="text-[12px] font-medium transition-colors duration-300"
+                        style={{ color: done ? GREEN : active ? GOLD_SOFT : "#3A4152" }}
+                      >
+                        {s.label}
+                      </p>
+                      {active && (
+                        <p className="text-[10px] mt-0.5" style={{ color: "#3A4152" }}>In progress…</p>
+                      )}
+                      {done && (
+                        <p className="text-[10px] mt-0.5" style={{ color: "#3A4152" }}>Completed</p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-            <p className="text-[10px] text-slate-700 mt-3">
-              PDF only · Max {MAX_MB} MB
-            </p>
+
+            {/* Supported banks */}
+            <div className="mt-4 pt-4" style={{ borderTop: `1px solid ${BORDER_SOFT}` }}>
+              <p className="text-[10px] uppercase tracking-wider mb-2" style={{ color: TEXT_FAINT }}>
+                Supported Banks
+              </p>
+              <div className="flex gap-1.5 flex-wrap">
+                {["SBI", "HDFC", "ICICI", "Axis"].map((b) => (
+                  <span key={b}
+                    className="text-[10px] px-2 py-0.5 rounded"
+                    style={{ border: `1px solid ${BORDER}`, color: TEXT_FAINT }}
+                  >
+                    {b}
+                  </span>
+                ))}
+              </div>
+              <p className="text-[10px] mt-3" style={{ color: "#3A4152" }}>
+                PDF only · Max {MAX_MB} MB
+              </p>
+            </div>
           </div>
         </div>
       </div>
