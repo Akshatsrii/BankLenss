@@ -22,24 +22,72 @@ const CATEGORIES = [
   "Transport", "ATM", "Investment", "Health", "Transfer", "Other"
 ];
 
-function StatCard({ label, value, icon, color }) {
+const INK        = "#0A0E17";
+const SURFACE    = "#12161F";
+const BORDER     = "#1F2530";
+const BORDER_SOFT= "#1B202B";
+const GOLD       = "#C9A227";
+const GOLD_SOFT  = "#D9B65A";
+const TEXT       = "#EDEFF3";
+const TEXT_DIM   = "#9AA1B2";
+const TEXT_FAINT = "#5F6678";
+const GREEN      = "#34D399";
+const RED        = "#F87171";
+const BLUE       = "#60A5FA";
+
+const FONT_STACK = `
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
+  @keyframes fadeUp   { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes floatSlow{ 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-5px); } }
+  @keyframes popIn    { from { opacity: 0; transform: scale(0.95) translateY(6px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+  @keyframes livePulse{
+    0%   { box-shadow: 0 0 0 0 ${GREEN}66; }
+    70%  { box-shadow: 0 0 0 6px ${GREEN}00; }
+    100% { box-shadow: 0 0 0 0 ${GREEN}00; }
+  }
+`;
+
+/* Decorative "passbook stub" divider — a perforated ledger edge */
+function PassbookDivider() {
+  return (
+    <div className="flex items-center gap-1.5 px-1 select-none" aria-hidden="true">
+      {Array.from({ length: 46 }).map((_, i) => (
+        <span key={i} className="w-1 h-1 rounded-full shrink-0" style={{ backgroundColor: "#232838" }} />
+      ))}
+    </div>
+  );
+}
+
+function StatCard({ label, value, icon, color, delay }) {
   return (
     <div
-      className="p-5 rounded-2xl border flex flex-col gap-2"
+      className="relative p-5 rounded-2xl border flex flex-col gap-2 overflow-hidden transition-all duration-300 hover:-translate-y-1"
       style={{
-        backgroundColor: "#12161F",
-        borderColor: "#1F2530",
+        backgroundColor: SURFACE,
+        borderColor: BORDER,
+        animation: "fadeUp 0.5s ease both",
+        animationDelay: `${delay}ms`,
       }}
+      onMouseEnter={(e) => (e.currentTarget.style.boxShadow = `0 14px 30px -16px ${color}70`)}
+      onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "none")}
     >
-      <div className="flex items-center justify-between">
-        <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+      <span className="absolute left-0 top-0 h-full w-[3px]" style={{ backgroundColor: color, opacity: 0.85 }} />
+      <span
+        className="absolute -right-6 -top-6 w-16 h-16 rounded-full"
+        style={{ background: `radial-gradient(circle, ${color}22, transparent 70%)` }}
+      />
+      <div className="flex items-center justify-between relative">
+        <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: TEXT_FAINT }}>
           {label}
         </span>
         <span className="p-1.5 rounded-lg text-sm" style={{ backgroundColor: `${color}1A`, color }}>
           {icon}
         </span>
       </div>
-      <p className="text-xl font-bold text-slate-100 font-mono">
+      <p
+        className="text-xl font-bold relative"
+        style={{ color: TEXT, fontFamily: "'IBM Plex Mono', monospace" }}
+      >
         {value}
       </p>
     </div>
@@ -134,33 +182,67 @@ export default function Ledger() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0E17] text-slate-100 p-6 md:p-10 font-sans">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div
+      className="min-h-screen p-6 md:p-10 font-sans relative overflow-hidden"
+      style={{ backgroundColor: INK, color: TEXT, fontFamily: "'Inter', sans-serif" }}
+    >
+      <style>{FONT_STACK}</style>
+
+      {/* Ambient glow accents */}
+      <div
+        className="absolute -top-24 -right-24 w-[26rem] h-[26rem] rounded-full pointer-events-none"
+        style={{ background: `radial-gradient(circle, ${GOLD}12, transparent 70%)` }}
+      />
+      <div
+        className="absolute bottom-0 -left-32 w-80 h-80 rounded-full pointer-events-none"
+        style={{ background: `radial-gradient(circle, ${BLUE}0D, transparent 70%)` }}
+      />
+
+      <div className="max-w-6xl mx-auto space-y-6 relative">
 
         {/* Header */}
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div>
-            <div className="flex items-center gap-2">
-              <BookOpen className="text-blue-500" size={24} />
-              <h1 className="text-2xl font-bold tracking-tight text-white">
+        <div
+          className="flex items-center justify-between gap-4 flex-wrap"
+          style={{ animation: "fadeUp 0.45s ease both" }}
+        >
+          <div className="flex items-start gap-3">
+            <div
+              className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0"
+              style={{
+                backgroundColor: `${GOLD}1A`,
+                border: `1px solid ${GOLD}40`,
+                animation: "floatSlow 4.5s ease-in-out infinite",
+              }}
+            >
+              <BookOpen size={19} style={{ color: GOLD_SOFT }} />
+            </div>
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.18em] mb-0.5" style={{ color: GOLD_SOFT }}>
+                Manual Records
+              </p>
+              <h1 className="text-2xl font-semibold" style={{ fontFamily: "'Fraunces', serif", color: TEXT }}>
                 Ledger Book
               </h1>
+              <p className="text-sm mt-1" style={{ color: TEXT_FAINT }}>
+                Add and manage your expected internal transaction records to match with statements.
+              </p>
             </div>
-            <p className="text-slate-400 text-sm mt-1">
-              Add and manage your expected internal transaction records to match with statements.
-            </p>
           </div>
 
           <button
             onClick={() => setShowModal(true)}
             className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl
-                       text-sm font-semibold transition-transform duration-200
-                       hover:-translate-y-0.5 active:translate-y-0 text-white"
-            style={{ backgroundColor: "#3b82f6" }}
+                       text-sm font-semibold transition-all duration-200
+                       hover:-translate-y-0.5 active:translate-y-0"
+            style={{ backgroundColor: GOLD, color: INK }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = GOLD_SOFT)}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = GOLD)}
           >
             <Plus size={16} /> Add expected entry
           </button>
         </div>
+
+        <PassbookDivider />
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -168,36 +250,58 @@ export default function Ledger() {
             label="Expected Credits (Income)"
             value={`₹${stats.credit.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`}
             icon={<ArrowUpCircle size={16} />}
-            color="#34D399"
+            color={GREEN}
+            delay={0}
           />
           <StatCard
             label="Expected Debits (Expenses)"
             value={`₹${stats.debit.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`}
             icon={<ArrowDownCircle size={16} />}
-            color="#F87171"
+            color={RED}
+            delay={80}
           />
           <StatCard
             label="Total Entries"
             value={stats.count}
             icon={<RefreshCw size={16} />}
-            color="#60A5FA"
+            color={BLUE}
+            delay={160}
           />
         </div>
 
         {/* Error Alert */}
         {error && (
-          <div className="flex items-center gap-2 px-4 py-3 rounded-xl border border-red-500/20 bg-red-500/5 text-red-400 text-sm">
+          <div
+            className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm"
+            style={{
+              border: `1px solid ${RED}33`,
+              backgroundColor: `${RED}0D`,
+              color: RED,
+              animation: "popIn 0.25s ease both",
+            }}
+          >
             <AlertCircle size={15} className="shrink-0" />
             {error}
           </div>
         )}
 
         {/* Entries Table */}
-        <div className="rounded-2xl border border-slate-800 overflow-hidden bg-[#12161F]/60">
+        <div
+          className="rounded-2xl overflow-hidden transition-shadow duration-300"
+          style={{
+            border: `1px solid ${BORDER}`,
+            backgroundColor: "rgba(18,22,31,0.6)",
+            animation: "fadeUp 0.55s ease both",
+            animationDelay: "220ms",
+          }}
+        >
           <div className="overflow-x-auto">
             <table className="w-full text-sm min-w-[600px]">
-              <thead className="bg-[#12161F]">
-                <tr className="border-b border-slate-800 text-left text-slate-500 text-xs uppercase font-semibold">
+              <thead style={{ backgroundColor: SURFACE }}>
+                <tr
+                  className="text-left text-xs uppercase font-semibold"
+                  style={{ borderBottom: `1px solid ${BORDER}`, color: TEXT_FAINT }}
+                >
                   <th className="px-5 py-3">Date</th>
                   <th className="px-5 py-3">Description</th>
                   <th className="px-5 py-3">Category</th>
@@ -205,43 +309,56 @@ export default function Ledger() {
                   <th className="px-5 py-3 text-right">Amount</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/50">
+              <tbody>
                 {loading ? (
                   Array.from({ length: 3 }).map((_, idx) => (
-                    <tr key={idx} className="animate-pulse">
-                      <td className="px-5 py-4"><div className="h-4 bg-slate-800 rounded w-20" /></td>
-                      <td className="px-5 py-4"><div className="h-4 bg-slate-800 rounded w-48" /></td>
-                      <td className="px-5 py-4"><div className="h-4 bg-slate-800 rounded w-16" /></td>
-                      <td className="px-5 py-4"><div className="h-4 bg-slate-800 rounded w-24" /></td>
-                      <td className="px-5 py-4"><div className="h-4 bg-slate-800 rounded w-16 ml-auto" /></td>
+                    <tr key={idx} className="animate-pulse" style={{ borderTop: idx ? `1px solid ${BORDER_SOFT}` : "none" }}>
+                      <td className="px-5 py-4"><div className="h-4 rounded w-20" style={{ backgroundColor: BORDER_SOFT }} /></td>
+                      <td className="px-5 py-4"><div className="h-4 rounded w-48" style={{ backgroundColor: BORDER_SOFT }} /></td>
+                      <td className="px-5 py-4"><div className="h-4 rounded w-16" style={{ backgroundColor: BORDER_SOFT }} /></td>
+                      <td className="px-5 py-4"><div className="h-4 rounded w-24" style={{ backgroundColor: BORDER_SOFT }} /></td>
+                      <td className="px-5 py-4"><div className="h-4 rounded w-16 ml-auto" style={{ backgroundColor: BORDER_SOFT }} /></td>
                     </tr>
                   ))
                 ) : entries.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-5 py-12 text-center text-slate-500">
+                    <td colSpan={5} className="px-5 py-12 text-center" style={{ color: TEXT_FAINT }}>
                       No ledger entries found. Click "Add expected entry" to record one!
                     </td>
                   </tr>
                 ) : (
-                  entries.map((entry) => (
-                    <tr key={entry.id} className="hover:bg-slate-900/20 transition-colors">
-                      <td className="px-5 py-4 text-slate-400 font-mono text-xs">
+                  entries.map((entry, i) => (
+                    <tr
+                      key={entry.id}
+                      className="transition-colors"
+                      style={{ borderTop: i ? `1px solid ${BORDER_SOFT}` : "none" }}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#161B26")}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                    >
+                      <td className="px-5 py-4 text-xs" style={{ color: TEXT_FAINT, fontFamily: "'IBM Plex Mono', monospace" }}>
                         {entry.date}
                       </td>
-                      <td className="px-5 py-4 text-slate-200">
+                      <td className="px-5 py-4" style={{ color: "#E4E6EB" }}>
                         {entry.description}
                       </td>
                       <td className="px-5 py-4">
-                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-slate-800 text-slate-400">
+                        <span
+                          className="px-2 py-0.5 rounded-full text-xs font-medium"
+                          style={{ backgroundColor: BORDER_SOFT, color: TEXT_DIM }}
+                        >
                           {entry.category}
                         </span>
                       </td>
-                      <td className="px-5 py-4 text-slate-400 font-mono text-xs">
+                      <td className="px-5 py-4 text-xs" style={{ color: TEXT_FAINT, fontFamily: "'IBM Plex Mono', monospace" }}>
                         {entry.referenceNo || "—"}
                       </td>
-                      <td className={`px-5 py-4 text-right font-mono text-xs font-bold ${
-                        entry.type === "credit" ? "text-green-400" : "text-red-400"
-                      }`}>
+                      <td
+                        className="px-5 py-4 text-right text-xs font-bold"
+                        style={{
+                          color: entry.type === "credit" ? GREEN : RED,
+                          fontFamily: "'IBM Plex Mono', monospace",
+                        }}
+                      >
                         {entry.type === "credit" ? "+" : "-"} ₹{entry.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                       </td>
                     </tr>
@@ -252,23 +369,42 @@ export default function Ledger() {
           </div>
         </div>
 
+        {/* Footer accent, consistent with Dashboard / Analytics / Export */}
+        <div
+          className="flex items-center justify-center gap-2 pt-2 pb-1 text-[11px]"
+          style={{ color: TEXT_FAINT, animation: "fadeUp 0.55s ease both", animationDelay: "300ms" }}
+        >
+          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: GREEN, animation: "livePulse 2s infinite" }} />
+          Ledger book · synced with your statements
+        </div>
+
       </div>
 
       {/* Add Entry Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div
+          className="fixed inset-0 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
+        >
           <div
-            className="w-full max-w-md rounded-2xl border p-6 space-y-4 shadow-2xl animate-in fade-in zoom-in-95 duration-150"
+            className="w-full max-w-md rounded-2xl border p-6 space-y-4 shadow-2xl"
             style={{
-              backgroundColor: "#12161F",
-              borderColor: "#1F2530",
+              backgroundColor: SURFACE,
+              borderColor: BORDER,
+              animation: "popIn 0.2s ease both",
             }}
           >
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h2 className="text-lg font-bold text-white flex items-center gap-1.5">
-                <BookOpen size={18} className="text-blue-500" /> Add expected entry
+            <div className="flex items-center justify-between pb-3" style={{ borderBottom: `1px solid ${BORDER}` }}>
+              <h2 className="text-lg font-semibold flex items-center gap-1.5" style={{ fontFamily: "'Fraunces', serif", color: TEXT }}>
+                <BookOpen size={18} style={{ color: GOLD_SOFT }} /> Add expected entry
               </h2>
-              <button onClick={() => setShowModal(false)} className="text-slate-500 hover:text-white transition-colors">
+              <button
+                onClick={() => setShowModal(false)}
+                className="transition-colors"
+                style={{ color: TEXT_FAINT }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = TEXT)}
+                onMouseLeave={(e) => (e.currentTarget.style.color = TEXT_FAINT)}
+              >
                 <X size={18} />
               </button>
             </div>
@@ -276,7 +412,10 @@ export default function Ledger() {
             <form onSubmit={handleFormSubmit} className="space-y-4">
               {/* Date */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wide flex items-center gap-1">
+                <label
+                  className="text-xs font-semibold uppercase tracking-wide flex items-center gap-1"
+                  style={{ color: TEXT_DIM }}
+                >
                   <Calendar size={12} /> Date *
                 </label>
                 <input
@@ -285,13 +424,19 @@ export default function Ledger() {
                   required
                   value={form.date}
                   onChange={handleInputChange}
-                  className="w-full bg-[#0A0E17] border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200 outline-none focus:border-blue-500 transition-colors"
+                  className="w-full rounded-xl px-3 py-2 text-sm outline-none transition-colors"
+                  style={{ backgroundColor: INK, border: `1px solid ${BORDER}`, color: TEXT }}
+                  onFocus={(e) => (e.target.style.borderColor = GOLD)}
+                  onBlur={(e) => (e.target.style.borderColor = BORDER)}
                 />
               </div>
 
               {/* Description */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wide flex items-center gap-1">
+                <label
+                  className="text-xs font-semibold uppercase tracking-wide flex items-center gap-1"
+                  style={{ color: TEXT_DIM }}
+                >
                   <BookOpen size={12} /> Description *
                 </label>
                 <input
@@ -301,14 +446,20 @@ export default function Ledger() {
                   placeholder="e.g. Rent, Salary deposit, Electric bill"
                   value={form.description}
                   onChange={handleInputChange}
-                  className="w-full bg-[#0A0E17] border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200 outline-none focus:border-blue-500 transition-colors"
+                  className="w-full rounded-xl px-3 py-2 text-sm outline-none transition-colors"
+                  style={{ backgroundColor: INK, border: `1px solid ${BORDER}`, color: TEXT }}
+                  onFocus={(e) => (e.target.style.borderColor = GOLD)}
+                  onBlur={(e) => (e.target.style.borderColor = BORDER)}
                 />
               </div>
 
               {/* Amount & Type */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wide flex items-center gap-1">
+                  <label
+                    className="text-xs font-semibold uppercase tracking-wide flex items-center gap-1"
+                    style={{ color: TEXT_DIM }}
+                  >
                     <DollarSign size={12} /> Amount *
                   </label>
                   <input
@@ -319,19 +470,31 @@ export default function Ledger() {
                     placeholder="0.00"
                     value={form.amount}
                     onChange={handleInputChange}
-                    className="w-full bg-[#0A0E17] border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200 outline-none focus:border-blue-500 transition-colors font-mono"
+                    className="w-full rounded-xl px-3 py-2 text-sm outline-none transition-colors"
+                    style={{
+                      backgroundColor: INK, border: `1px solid ${BORDER}`, color: TEXT,
+                      fontFamily: "'IBM Plex Mono', monospace",
+                    }}
+                    onFocus={(e) => (e.target.style.borderColor = GOLD)}
+                    onBlur={(e) => (e.target.style.borderColor = BORDER)}
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wide flex items-center gap-1">
+                  <label
+                    className="text-xs font-semibold uppercase tracking-wide flex items-center gap-1"
+                    style={{ color: TEXT_DIM }}
+                  >
                     Type *
                   </label>
                   <select
                     name="type"
                     value={form.type}
                     onChange={handleInputChange}
-                    className="w-full bg-[#0A0E17] border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-200 outline-none focus:border-blue-500 transition-colors cursor-pointer"
+                    className="w-full rounded-xl px-3 py-2.5 text-sm outline-none transition-colors cursor-pointer"
+                    style={{ backgroundColor: INK, border: `1px solid ${BORDER}`, color: TEXT }}
+                    onFocus={(e) => (e.target.style.borderColor = GOLD)}
+                    onBlur={(e) => (e.target.style.borderColor = BORDER)}
                   >
                     <option value="debit">Debit (-) </option>
                     <option value="credit">Credit (+)</option>
@@ -342,14 +505,20 @@ export default function Ledger() {
               {/* Category & Reference */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wide flex items-center gap-1">
+                  <label
+                    className="text-xs font-semibold uppercase tracking-wide flex items-center gap-1"
+                    style={{ color: TEXT_DIM }}
+                  >
                     <Tag size={12} /> Category
                   </label>
                   <select
                     name="category"
                     value={form.category}
                     onChange={handleInputChange}
-                    className="w-full bg-[#0A0E17] border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-200 outline-none focus:border-blue-500 transition-colors cursor-pointer"
+                    className="w-full rounded-xl px-3 py-2.5 text-sm outline-none transition-colors cursor-pointer"
+                    style={{ backgroundColor: INK, border: `1px solid ${BORDER}`, color: TEXT }}
+                    onFocus={(e) => (e.target.style.borderColor = GOLD)}
+                    onBlur={(e) => (e.target.style.borderColor = BORDER)}
                   >
                     {CATEGORIES.map((cat) => (
                       <option key={cat} value={cat}>
@@ -360,7 +529,10 @@ export default function Ledger() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wide flex items-center gap-1">
+                  <label
+                    className="text-xs font-semibold uppercase tracking-wide flex items-center gap-1"
+                    style={{ color: TEXT_DIM }}
+                  >
                     <Hash size={12} /> Reference No
                   </label>
                   <input
@@ -369,24 +541,36 @@ export default function Ledger() {
                     placeholder="e.g. UPI Ref, Check#"
                     value={form.referenceNo}
                     onChange={handleInputChange}
-                    className="w-full bg-[#0A0E17] border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200 outline-none focus:border-blue-500 transition-colors font-mono"
+                    className="w-full rounded-xl px-3 py-2 text-sm outline-none transition-colors"
+                    style={{
+                      backgroundColor: INK, border: `1px solid ${BORDER}`, color: TEXT,
+                      fontFamily: "'IBM Plex Mono', monospace",
+                    }}
+                    onFocus={(e) => (e.target.style.borderColor = GOLD)}
+                    onBlur={(e) => (e.target.style.borderColor = BORDER)}
                   />
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+              <div className="flex items-center justify-end gap-3 pt-3" style={{ borderTop: `1px solid ${BORDER}` }}>
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 text-sm font-medium transition-colors"
+                  className="px-4 py-2 rounded-xl text-sm font-medium transition-colors"
+                  style={{ color: TEXT_FAINT }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = TEXT; e.currentTarget.style.backgroundColor = BORDER_SOFT; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = TEXT_FAINT; e.currentTarget.style.backgroundColor = "transparent"; }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex items-center gap-1.5 px-5 py-2 rounded-xl text-sm font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: GOLD, color: INK }}
+                  onMouseEnter={(e) => { if (!submitting) e.currentTarget.style.backgroundColor = GOLD_SOFT; }}
+                  onMouseLeave={(e) => { if (!submitting) e.currentTarget.style.backgroundColor = GOLD; }}
                 >
                   {submitting && <Loader2 size={14} className="animate-spin" />}
                   {submitting ? "Saving..." : "Save Entry"}
