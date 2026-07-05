@@ -13,13 +13,32 @@ import {
 } from "firebase/auth";
 import { auth } from "../firebase";
 import { useAuth } from "../hooks/useAuth";
-import { Lock, LogOut, CheckCircle, AlertCircle, Eye, EyeOff } from "lucide-react";
+import { Lock, LogOut, CheckCircle, AlertCircle, Eye, EyeOff, UserRound } from "lucide-react";
 
-const inputClass = `
-  w-full bg-slate-900 border border-slate-700 rounded-xl
-  px-4 py-3 text-slate-100 placeholder-slate-600 text-sm
-  outline-none focus:border-blue-500 focus:ring-1
-  focus:ring-blue-500/30 transition-colors disabled:opacity-50
+const INK        = "#0A0E17";
+const SURFACE    = "#12161F";
+const BORDER     = "#1F2530";
+const BORDER_SOFT= "#1B202B";
+const GOLD       = "#C9A227";
+const GOLD_SOFT  = "#D9B65A";
+const TEXT       = "#EDEFF3";
+const TEXT_DIM   = "#9AA1B2";
+const TEXT_FAINT = "#5F6678";
+const GREEN      = "#34D399";
+const RED        = "#F87171";
+
+const inputClass = "w-full rounded-xl px-4 py-3 text-sm outline-none transition-colors disabled:opacity-50";
+
+const FONT_STACK = `
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
+  @keyframes fadeUp    { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes floatSlow { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-5px); } }
+  @keyframes popIn     { from { opacity: 0; transform: scale(0.96) translateY(4px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+  @keyframes livePulse {
+    0%   { box-shadow: 0 0 0 0 ${GREEN}66; }
+    70%  { box-shadow: 0 0 0 6px ${GREEN}00; }
+    100% { box-shadow: 0 0 0 0 ${GREEN}00; }
+  }
 `;
 
 export default function Profile() {
@@ -78,49 +97,116 @@ export default function Profile() {
     : "—";
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-6 md:p-10">
-      <div className="max-w-lg mx-auto space-y-6">
+    <div
+      className="min-h-screen p-6 md:p-10 relative overflow-hidden"
+      style={{ backgroundColor: INK, color: TEXT_DIM, fontFamily: "'Inter', sans-serif" }}
+    >
+      <style>{FONT_STACK}</style>
 
-        <div>
-          <h1 className="text-2xl font-bold text-white">Profile</h1>
-          <p className="text-slate-400 text-sm mt-1">Manage your account settings.</p>
+      {/* Ambient glow accents */}
+      <div
+        className="absolute -top-24 -right-24 w-[26rem] h-[26rem] rounded-full pointer-events-none"
+        style={{ background: `radial-gradient(circle, ${GOLD}12, transparent 70%)` }}
+      />
+      <div
+        className="absolute bottom-0 -left-32 w-80 h-80 rounded-full pointer-events-none"
+        style={{ background: `radial-gradient(circle, #60A5FA0D, transparent 70%)` }}
+      />
+
+      <div className="max-w-lg mx-auto space-y-6 relative">
+
+        <div className="flex items-center gap-3" style={{ animation: "fadeUp 0.45s ease both" }}>
+          <div
+            className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0"
+            style={{
+              backgroundColor: `${GOLD}1A`,
+              border: `1px solid ${GOLD}40`,
+              animation: "floatSlow 4.5s ease-in-out infinite",
+            }}
+          >
+            <UserRound size={19} style={{ color: GOLD_SOFT }} />
+          </div>
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.18em] mb-0.5" style={{ color: GOLD_SOFT }}>Account</p>
+            <h1 className="text-2xl font-semibold" style={{ fontFamily: "'Fraunces', serif", color: TEXT }}>
+              Profile
+            </h1>
+          </div>
         </div>
+        <p className="text-sm -mt-4" style={{ color: TEXT_FAINT, animation: "fadeUp 0.5s ease both", animationDelay: "40ms" }}>
+          Manage your account settings.
+        </p>
 
         {/* Avatar + info */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex items-center gap-5">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#1e3a5f] to-[#1d4ed8] flex items-center justify-center text-xl font-bold text-blue-300 border border-blue-500/30 shrink-0">
+        <div
+          className="rounded-2xl p-6 flex items-center gap-5 transition-shadow duration-300"
+          style={{
+            backgroundColor: SURFACE, border: `1px solid ${BORDER}`,
+            animation: "fadeUp 0.5s ease both", animationDelay: "100ms",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.boxShadow = "0 16px 36px -20px rgba(0,0,0,0.55)")}
+          onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "none")}
+        >
+          <div
+            className="w-16 h-16 rounded-2xl flex items-center justify-center text-xl font-bold shrink-0"
+            style={{
+              background: `linear-gradient(135deg, ${GOLD}33, ${GOLD}0D)`,
+              border: `1px solid ${GOLD}40`,
+              color: GOLD_SOFT,
+              fontFamily: "'Fraunces', serif",
+            }}
+          >
             {initials}
           </div>
           <div className="min-w-0">
-            <p className="text-white font-semibold truncate">{user?.email}</p>
-            <p className="text-slate-500 text-xs mt-0.5">Member since {joinedDate}</p>
-            <span className="inline-flex items-center gap-1 mt-2 text-[11px] text-green-400 bg-green-500/10 border border-green-500/20 px-2 py-0.5 rounded-full">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400" /> Active
+            <p className="font-semibold truncate" style={{ color: TEXT }}>{user?.email}</p>
+            <p className="text-xs mt-0.5" style={{ color: TEXT_FAINT }}>Member since {joinedDate}</p>
+            <span
+              className="inline-flex items-center gap-1 mt-2 text-[11px] px-2 py-0.5 rounded-full"
+              style={{ color: GREEN, backgroundColor: `${GREEN}1A`, border: `1px solid ${GREEN}33` }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: GREEN, animation: "livePulse 2s infinite" }} /> Active
             </span>
           </div>
         </div>
 
         {/* Change password */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+        <div
+          className="rounded-2xl p-6 space-y-4 transition-shadow duration-300"
+          style={{
+            backgroundColor: SURFACE, border: `1px solid ${BORDER}`,
+            animation: "fadeUp 0.5s ease both", animationDelay: "160ms",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.boxShadow = "0 16px 36px -20px rgba(0,0,0,0.55)")}
+          onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "none")}
+        >
           <div className="flex items-center gap-2 mb-1">
-            <Lock size={15} className="text-slate-400" />
-            <h2 className="text-sm font-semibold text-slate-200">Change Password</h2>
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${GOLD}14` }}>
+              <Lock size={13} style={{ color: GOLD_SOFT }} />
+            </div>
+            <h2 className="text-sm font-semibold" style={{ color: "#E4E6EB" }}>Change Password</h2>
           </div>
 
           {pwSuccess && (
-            <div className="flex items-center gap-2 px-3 py-2.5 bg-green-500/10 border border-green-500/20 rounded-lg text-green-400 text-sm">
+            <div
+              className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm"
+              style={{ backgroundColor: `${GREEN}14`, border: `1px solid ${GREEN}33`, color: GREEN, animation: "popIn 0.2s ease both" }}
+            >
               <CheckCircle size={15} /> Password updated successfully.
             </div>
           )}
           {pwError && (
-            <div className="flex items-center gap-2 px-3 py-2.5 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
+            <div
+              className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm"
+              style={{ backgroundColor: `${RED}0D`, border: `1px solid ${RED}33`, color: RED, animation: "popIn 0.2s ease both" }}
+            >
               <AlertCircle size={15} /> {pwError}
             </div>
           )}
 
           {/* Current password */}
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1.5">Current Password</label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: TEXT_DIM }}>Current Password</label>
             <div className="relative">
               <input
                 type={showCurrent ? "text" : "password"}
@@ -129,9 +215,16 @@ export default function Profile() {
                 placeholder="••••••••"
                 disabled={pwLoading}
                 className={`${inputClass} pr-10`}
+                style={{ backgroundColor: INK, border: `1px solid ${BORDER}`, color: TEXT }}
+                onFocus={(e) => (e.target.style.borderColor = GOLD)}
+                onBlur={(e) => (e.target.style.borderColor = BORDER)}
               />
               <button type="button" onClick={() => setShowCurrent(v => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
+                className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
+                style={{ color: TEXT_FAINT }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = TEXT_DIM)}
+                onMouseLeave={(e) => (e.currentTarget.style.color = TEXT_FAINT)}
+              >
                 {showCurrent ? <EyeOff size={15} /> : <Eye size={15} />}
               </button>
             </div>
@@ -139,7 +232,7 @@ export default function Profile() {
 
           {/* New password */}
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1.5">New Password</label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: TEXT_DIM }}>New Password</label>
             <div className="relative">
               <input
                 type={showNew ? "text" : "password"}
@@ -148,9 +241,16 @@ export default function Profile() {
                 placeholder="Min 6 characters"
                 disabled={pwLoading}
                 className={`${inputClass} pr-10`}
+                style={{ backgroundColor: INK, border: `1px solid ${BORDER}`, color: TEXT }}
+                onFocus={(e) => (e.target.style.borderColor = GOLD)}
+                onBlur={(e) => (e.target.style.borderColor = BORDER)}
               />
               <button type="button" onClick={() => setShowNew(v => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
+                className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
+                style={{ color: TEXT_FAINT }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = TEXT_DIM)}
+                onMouseLeave={(e) => (e.currentTarget.style.color = TEXT_FAINT)}
+              >
                 {showNew ? <EyeOff size={15} /> : <Eye size={15} />}
               </button>
             </div>
@@ -158,7 +258,7 @@ export default function Profile() {
 
           {/* Confirm */}
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1.5">Confirm New Password</label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: TEXT_DIM }}>Confirm New Password</label>
             <input
               type="password"
               value={confirmPw}
@@ -166,18 +266,23 @@ export default function Profile() {
               placeholder="Re-enter new password"
               disabled={pwLoading}
               className={inputClass}
+              style={{ backgroundColor: INK, border: `1px solid ${BORDER}`, color: TEXT }}
+              onFocus={(e) => (e.target.style.borderColor = GOLD)}
+              onBlur={(e) => (e.target.style.borderColor = BORDER)}
             />
           </div>
 
           <button
             onClick={handleChangePassword}
             disabled={pwLoading}
-            className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500
-                       text-white font-medium text-sm transition-colors
+            className="w-full py-2.5 rounded-xl font-medium text-sm transition-all
                        disabled:opacity-50 flex items-center justify-center gap-2"
+            style={{ backgroundColor: GOLD, color: INK }}
+            onMouseEnter={(e) => { if (!pwLoading) e.currentTarget.style.backgroundColor = GOLD_SOFT; }}
+            onMouseLeave={(e) => { if (!pwLoading) e.currentTarget.style.backgroundColor = GOLD; }}
           >
             {pwLoading
-              ? <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+              ? <span className="w-4 h-4 rounded-full border-2 animate-spin" style={{ borderColor: `${INK}4D`, borderTopColor: INK }} />
               : "Update Password"
             }
           </button>
@@ -186,9 +291,11 @@ export default function Profile() {
         {/* Sign out */}
         <button
           onClick={handleSignOut}
-          className="w-full py-3 rounded-xl border border-red-500/20
-                     text-red-400 hover:bg-red-500/10 text-sm font-medium
+          className="w-full py-3 rounded-xl text-sm font-medium
                      flex items-center justify-center gap-2 transition-colors"
+          style={{ border: `1px solid ${RED}33`, color: RED, animation: "fadeUp 0.5s ease both", animationDelay: "220ms" }}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `${RED}0D`)}
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
         >
           <LogOut size={15} /> Sign Out
         </button>

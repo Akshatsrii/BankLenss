@@ -1,274 +1,305 @@
+/**
+ * Profile.jsx
+ * User profile — email, joined date, change password, sign out
+ */
+
 import { useState, useCallback } from "react";
-import { useNavigate, Link, Navigate } from "react-router-dom";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
-import { auth, db } from "../firebase";
+import { useNavigate } from "react-router-dom";
+import {
+  updatePassword,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
+  signOut,
+} from "firebase/auth";
+import { auth } from "../firebase";
 import { useAuth } from "../hooks/useAuth";
-import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle } from "lucide-react";
+import { Lock, LogOut, CheckCircle, AlertCircle, Eye, EyeOff, UserRound } from "lucide-react";
 
-const FIREBASE_ERRORS = {
-  "auth/email-already-in-use": "An account with this email already exists.",
-  "auth/invalid-email": "Please enter a valid email address.",
-  "auth/weak-password": "Password must be at least 6 characters.",
-};
+const INK        = "#0A0E17";
+const SURFACE    = "#12161F";
+const BORDER     = "#1F2530";
+const BORDER_SOFT= "#1B202B";
+const GOLD       = "#C9A227";
+const GOLD_SOFT  = "#D9B65A";
+const TEXT       = "#EDEFF3";
+const TEXT_DIM   = "#9AA1B2";
+const TEXT_FAINT = "#5F6678";
+const GREEN      = "#34D399";
+const RED        = "#F87171";
 
-const inputClass = `w-full bg-[#0F1422] border border-slate-800 rounded-xl px-4 py-3.5 text-white placeholder-slate-500 outline-none focus:border-blue-500 transition-all`;
+const inputClass = "w-full rounded-xl px-4 py-3 text-sm outline-none transition-colors disabled:opacity-50";
 
-export default function Signup() {
-  const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+const FONT_STACK = `
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
+  @keyframes fadeUp    { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes floatSlow { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-5px); } }
+  @keyframes popIn     { from { opacity: 0; transform: scale(0.96) translateY(4px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+  @keyframes livePulse {
+    0%   { box-shadow: 0 0 0 0 ${GREEN}66; }
+    70%  { box-shadow: 0 0 0 6px ${GREEN}00; }
+    100% { box-shadow: 0 0 0 0 ${GREEN}00; }
+  }
+`;
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
-  const [showPw, setShowPw] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
+export default function Profile() {
+  const { user }    = useAuth();
+  const navigate    = useNavigate();
 
-  const strength =
-    password.length === 0
-      ? null
-      : password.length < 6
-      ? "weak"
-      : password.length < 10
-      ? "fair"
-      : "strong";
+  const [currentPw, setCurrentPw]   = useState("");
+  const [newPw, setNewPw]           = useState("");
+  const [confirmPw, setConfirmPw]   = useState("");
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew]         = useState(false);
+  const [pwLoading, setPwLoading]   = useState(false);
+  const [pwSuccess, setPwSuccess]   = useState(false);
+  const [pwError, setPwError]       = useState(null);
 
-  const strengthColor = {
-    weak: "bg-red-500",
-    fair: "bg-yellow-500",
-    strong: "bg-green-500",
-  };
+  const handleChangePassword = useCallback(async () => {
+    setPwError(null);
+    setPwSuccess(false);
 
-  const strengthWidth = {
-    weak: "w-1/3",
-    fair: "w-2/3",
-    strong: "w-full",
-  };
+    if (!currentPw) { setPwError("Enter your current password."); return; }
+    if (!newPw)     { setPwError("Enter a new password."); return; }
+    if (newPw.length < 6) { setPwError("New password must be at least 6 characters."); return; }
+    if (newPw !== confirmPw) { setPwError("Passwords do not match."); return; }
 
-  const handleSignup = useCallback(async () => {
-    let validationErr = null;
-    if (!email.trim()) validationErr = "Email is required.";
-    else if (!/\S+@\S+\.\S+/.test(email)) validationErr = "Enter a valid email.";
-    else if (!password) validationErr = "Password is required.";
-    else if (password.length < 6) validationErr = "Password must be at least 6 characters.";
-    else if (password !== confirm) validationErr = "Passwords do not match.";
-
-    if (validationErr) {
-      setError(validationErr);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
+    setPwLoading(true);
     try {
-      const credential = await createUserWithEmailAndPassword(auth, email.trim(), password);
-      await setDoc(doc(db, "users", credential.user.uid), {
-        uid: credential.user.uid,
-        email: credential.user.email,
-        createdAt: serverTimestamp(),
-      });
-      navigate("/dashboard", { replace: true });
+      // Re-authenticate first
+      const credential = EmailAuthProvider.credential(user.email, currentPw);
+      await reauthenticateWithCredential(user, credential);
+      await updatePassword(user, newPw);
+      setPwSuccess(true);
+      setCurrentPw(""); setNewPw(""); setConfirmPw("");
     } catch (err) {
-      setError(
-        FIREBASE_ERRORS[err.code] || err.message || "Signup failed. Please try again."
-      );
+      const msg = {
+        "auth/wrong-password":       "Current password is incorrect.",
+        "auth/weak-password":        "New password is too weak.",
+        "auth/too-many-requests":    "Too many attempts. Try again later.",
+        "auth/requires-recent-login":"Please sign out and sign back in first.",
+      }[err.code] || err.message;
+      setPwError(msg);
     } finally {
-      setLoading(false);
+      setPwLoading(false);
     }
-  }, [email, password, confirm, navigate]);
+  }, [user, currentPw, newPw, confirmPw]);
 
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      handleSignup();
-    }
+  const handleSignOut = async () => {
+    await signOut(auth);
+    navigate("/login", { replace: true });
   };
 
-  if (authLoading) {
-    return (
-      <div className="h-screen bg-[#0A0E17] flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  if (user) {
-    return <Navigate to="/dashboard" replace />;
-  }
+  const initials = user?.email?.slice(0, 2).toUpperCase() || "??";
+  const joinedDate = user?.metadata?.creationTime
+    ? new Date(user.metadata.creationTime).toLocaleDateString("en-IN", {
+        day: "numeric", month: "long", year: "numeric",
+      })
+    : "—";
 
   return (
-    <div className="h-screen flex bg-[#0A0E17] font-sans">
-      {/* Decorative Left Side */}
-      <div className="hidden lg:flex w-1/2 h-screen flex-col justify-between p-12 bg-gradient-to-b from-[#0F1422] to-[#0A0E17] border-r border-slate-800/40 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-5 select-none pointer-events-none">
-          <div className="absolute top-[-20%] left-[-10%] w-[80%] h-[80%] rounded-full bg-blue-500 blur-[150px]" />
-          <div className="absolute bottom-[-20%] right-[-10%] w-[80%] h-[80%] rounded-full bg-indigo-500 blur-[150px]" />
-        </div>
+    <div
+      className="min-h-screen p-6 md:p-10 relative overflow-hidden"
+      style={{ backgroundColor: INK, color: TEXT_DIM, fontFamily: "'Inter', sans-serif" }}
+    >
+      <style>{FONT_STACK}</style>
 
-        {/* Brand Logo */}
-        <div className="flex items-center gap-2.5 relative z-10">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
-            <svg className="w-4 h-4 fill-white" viewBox="0 0 16 16">
-              <path d="M2 4h12v1.5H2zM3 7h10v1H3zM4 10h8v1H4z" />
-              <rect x="1" y="2" width="14" height="12" rx="2" fill="none" stroke="white" strokeWidth="1.2" />
-            </svg>
+      {/* Ambient glow accents */}
+      <div
+        className="absolute -top-24 -right-24 w-[26rem] h-[26rem] rounded-full pointer-events-none"
+        style={{ background: `radial-gradient(circle, ${GOLD}12, transparent 70%)` }}
+      />
+      <div
+        className="absolute bottom-0 -left-32 w-80 h-80 rounded-full pointer-events-none"
+        style={{ background: `radial-gradient(circle, #60A5FA0D, transparent 70%)` }}
+      />
+
+      <div className="max-w-lg mx-auto space-y-6 relative">
+
+        <div className="flex items-center gap-3" style={{ animation: "fadeUp 0.45s ease both" }}>
+          <div
+            className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0"
+            style={{
+              backgroundColor: `${GOLD}1A`,
+              border: `1px solid ${GOLD}40`,
+              animation: "floatSlow 4.5s ease-in-out infinite",
+            }}
+          >
+            <UserRound size={19} style={{ color: GOLD_SOFT }} />
           </div>
-          <span className="text-slate-200 text-lg font-bold tracking-wide">
-            Bank<span className="text-blue-400">Digitizer</span>
-          </span>
-        </div>
-
-        {/* Hero Quote */}
-        <div className="space-y-4 relative z-10">
-          <p className="text-xs font-semibold tracking-[0.2em] text-blue-400 uppercase">
-            Get Started
-          </p>
-          <h2 className="text-4xl font-semibold leading-tight text-white max-w-md">
-            Create your account to start digitizing.
-          </h2>
-          <p className="text-slate-400 text-sm max-w-sm">
-            Analyze your finances across major Indian banks like SBI, HDFC, ICICI, and Axis in minutes.
-          </p>
-        </div>
-
-        {/* Copyright */}
-        <p className="text-xs text-slate-500 relative z-10">
-          © {new Date().getFullYear()} Ledger Inc. All rights reserved.
-        </p>
-      </div>
-
-      {/* Right Signup Section */}
-      <div className="w-full lg:w-1/2 h-screen flex items-center justify-center px-6 relative overflow-y-auto py-12">
-        <div className="absolute inset-0 block lg:hidden opacity-5 select-none pointer-events-none">
-          <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-blue-500 blur-[120px]" />
-        </div>
-
-        <div className="w-full max-w-md bg-[#12161F] border border-slate-800 rounded-3xl p-8 shadow-2xl relative z-10">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-white tracking-tight">
-              Create Account
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.18em] mb-0.5" style={{ color: GOLD_SOFT }}>Account</p>
+            <h1 className="text-2xl font-semibold" style={{ fontFamily: "'Fraunces', serif", color: TEXT }}>
+              Profile
             </h1>
-            <p className="text-slate-400 text-sm mt-2">
-              Start digitizing your bank statements
-            </p>
+          </div>
+        </div>
+        <p className="text-sm -mt-4" style={{ color: TEXT_FAINT, animation: "fadeUp 0.5s ease both", animationDelay: "40ms" }}>
+          Manage your account settings.
+        </p>
+
+        {/* Avatar + info */}
+        <div
+          className="rounded-2xl p-6 flex items-center gap-5 transition-shadow duration-300"
+          style={{
+            backgroundColor: SURFACE, border: `1px solid ${BORDER}`,
+            animation: "fadeUp 0.5s ease both", animationDelay: "100ms",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.boxShadow = "0 16px 36px -20px rgba(0,0,0,0.55)")}
+          onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "none")}
+        >
+          <div
+            className="w-16 h-16 rounded-2xl flex items-center justify-center text-xl font-bold shrink-0"
+            style={{
+              background: `linear-gradient(135deg, ${GOLD}33, ${GOLD}0D)`,
+              border: `1px solid ${GOLD}40`,
+              color: GOLD_SOFT,
+              fontFamily: "'Fraunces', serif",
+            }}
+          >
+            {initials}
+          </div>
+          <div className="min-w-0">
+            <p className="font-semibold truncate" style={{ color: TEXT }}>{user?.email}</p>
+            <p className="text-xs mt-0.5" style={{ color: TEXT_FAINT }}>Member since {joinedDate}</p>
+            <span
+              className="inline-flex items-center gap-1 mt-2 text-[11px] px-2 py-0.5 rounded-full"
+              style={{ color: GREEN, backgroundColor: `${GREEN}1A`, border: `1px solid ${GREEN}33` }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: GREEN, animation: "livePulse 2s infinite" }} /> Active
+            </span>
+          </div>
+        </div>
+
+        {/* Change password */}
+        <div
+          className="rounded-2xl p-6 space-y-4 transition-shadow duration-300"
+          style={{
+            backgroundColor: SURFACE, border: `1px solid ${BORDER}`,
+            animation: "fadeUp 0.5s ease both", animationDelay: "160ms",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.boxShadow = "0 16px 36px -20px rgba(0,0,0,0.55)")}
+          onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "none")}
+        >
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${GOLD}14` }}>
+              <Lock size={13} style={{ color: GOLD_SOFT }} />
+            </div>
+            <h2 className="text-sm font-semibold" style={{ color: "#E4E6EB" }}>Change Password</h2>
           </div>
 
-          {/* Error Alert */}
-          {error && (
-            <div className="flex items-center gap-2.5 mb-5 p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-              <AlertCircle size={16} className="shrink-0" />
-              <span>{error}</span>
+          {pwSuccess && (
+            <div
+              className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm"
+              style={{ backgroundColor: `${GREEN}14`, border: `1px solid ${GREEN}33`, color: GREEN, animation: "popIn 0.2s ease both" }}
+            >
+              <CheckCircle size={15} /> Password updated successfully.
+            </div>
+          )}
+          {pwError && (
+            <div
+              className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm"
+              style={{ backgroundColor: `${RED}0D`, border: `1px solid ${RED}33`, color: RED, animation: "popIn 0.2s ease both" }}
+            >
+              <AlertCircle size={15} /> {pwError}
             </div>
           )}
 
-          {/* Email */}
-          <div className="mb-4">
-            <label className="block text-slate-300 text-xs font-semibold uppercase tracking-wide mb-2">
-              Email Address
-            </label>
+          {/* Current password */}
+          <div>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: TEXT_DIM }}>Current Password</label>
             <div className="relative">
-              <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
               <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="you@example.com"
-                className={`${inputClass} pl-12`}
+                type={showCurrent ? "text" : "password"}
+                value={currentPw}
+                onChange={(e) => setCurrentPw(e.target.value)}
+                placeholder="••••••••"
+                disabled={pwLoading}
+                className={`${inputClass} pr-10`}
+                style={{ backgroundColor: INK, border: `1px solid ${BORDER}`, color: TEXT }}
+                onFocus={(e) => (e.target.style.borderColor = GOLD)}
+                onBlur={(e) => (e.target.style.borderColor = BORDER)}
               />
-            </div>
-          </div>
-
-          {/* Password */}
-          <div className="mb-4">
-            <label className="block text-slate-300 text-xs font-semibold uppercase tracking-wide mb-2">
-              Password
-            </label>
-            <div className="relative">
-              <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
-              <input
-                type={showPw ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="At least 6 characters"
-                className={`${inputClass} pl-12 pr-12`}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPw(!showPw)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+              <button type="button" onClick={() => setShowCurrent(v => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
+                style={{ color: TEXT_FAINT }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = TEXT_DIM)}
+                onMouseLeave={(e) => (e.currentTarget.style.color = TEXT_FAINT)}
               >
-                {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                {showCurrent ? <EyeOff size={15} /> : <Eye size={15} />}
               </button>
             </div>
-
-            {strength && (
-              <div className="mt-2.5 flex items-center justify-between">
-                <div className="w-[60%] h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                  <div className={`h-full ${strengthColor[strength]} ${strengthWidth[strength]} transition-all duration-300`} />
-                </div>
-                <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-                  {strength} password
-                </span>
-              </div>
-            )}
           </div>
 
-          {/* Confirm Password */}
-          <div className="mb-8">
-            <label className="block text-slate-300 text-xs font-semibold uppercase tracking-wide mb-2">
-              Confirm Password
-            </label>
+          {/* New password */}
+          <div>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: TEXT_DIM }}>New Password</label>
             <div className="relative">
-              <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
               <input
-                type={showConfirm ? "text" : "password"}
-                value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Confirm password"
-                className={`${inputClass} pl-12 pr-12`}
+                type={showNew ? "text" : "password"}
+                value={newPw}
+                onChange={(e) => setNewPw(e.target.value)}
+                placeholder="Min 6 characters"
+                disabled={pwLoading}
+                className={`${inputClass} pr-10`}
+                style={{ backgroundColor: INK, border: `1px solid ${BORDER}`, color: TEXT }}
+                onFocus={(e) => (e.target.style.borderColor = GOLD)}
+                onBlur={(e) => (e.target.style.borderColor = BORDER)}
               />
-              <button
-                type="button"
-                onClick={() => setShowConfirm(!showConfirm)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+              <button type="button" onClick={() => setShowNew(v => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
+                style={{ color: TEXT_FAINT }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = TEXT_DIM)}
+                onMouseLeave={(e) => (e.currentTarget.style.color = TEXT_FAINT)}
               >
-                {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                {showNew ? <EyeOff size={15} /> : <Eye size={15} />}
               </button>
             </div>
-
-            {confirm && (
-              <div className="mt-2 flex items-center gap-1.5 text-xs">
-                {password === confirm ? (
-                  <span className="text-green-500 flex items-center gap-1"><CheckCircle size={12} /> Passwords match</span>
-                ) : (
-                  <span className="text-red-400 flex items-center gap-1"><AlertCircle size={12} /> Passwords do not match</span>
-                )}
-              </div>
-            )}
           </div>
 
-          {/* Signup Button */}
+          {/* Confirm */}
+          <div>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: TEXT_DIM }}>Confirm New Password</label>
+            <input
+              type="password"
+              value={confirmPw}
+              onChange={(e) => setConfirmPw(e.target.value)}
+              placeholder="Re-enter new password"
+              disabled={pwLoading}
+              className={inputClass}
+              style={{ backgroundColor: INK, border: `1px solid ${BORDER}`, color: TEXT }}
+              onFocus={(e) => (e.target.style.borderColor = GOLD)}
+              onBlur={(e) => (e.target.style.borderColor = BORDER)}
+            />
+          </div>
+
           <button
-            onClick={handleSignup}
-            disabled={loading}
-            className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold shadow-lg shadow-blue-600/10 hover:shadow-blue-500/20 active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            onClick={handleChangePassword}
+            disabled={pwLoading}
+            className="w-full py-2.5 rounded-xl font-medium text-sm transition-all
+                       disabled:opacity-50 flex items-center justify-center gap-2"
+            style={{ backgroundColor: GOLD, color: INK }}
+            onMouseEnter={(e) => { if (!pwLoading) e.currentTarget.style.backgroundColor = GOLD_SOFT; }}
+            onMouseLeave={(e) => { if (!pwLoading) e.currentTarget.style.backgroundColor = GOLD; }}
           >
-            {loading ? "Creating Account..." : "Create Account"}
+            {pwLoading
+              ? <span className="w-4 h-4 rounded-full border-2 animate-spin" style={{ borderColor: `${INK}4D`, borderTopColor: INK }} />
+              : "Update Password"
+            }
           </button>
-
-          {/* Login Link */}
-          <p className="text-center text-slate-400 text-sm mt-6">
-            Already have an account?{" "}
-            <Link to="/login" className="text-blue-400 hover:text-blue-300 font-semibold transition-colors">
-              Sign In
-            </Link>
-          </p>
         </div>
+
+        {/* Sign out */}
+        <button
+          onClick={handleSignOut}
+          className="w-full py-3 rounded-xl text-sm font-medium
+                     flex items-center justify-center gap-2 transition-colors"
+          style={{ border: `1px solid ${RED}33`, color: RED, animation: "fadeUp 0.5s ease both", animationDelay: "220ms" }}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `${RED}0D`)}
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+        >
+          <LogOut size={15} /> Sign Out
+        </button>
+
       </div>
     </div>
   );
