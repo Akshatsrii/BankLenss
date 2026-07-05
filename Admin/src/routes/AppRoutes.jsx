@@ -12,6 +12,7 @@ import Transactions from "../pages/Transactions";
 import Statements   from "../pages/Statements";
 import Analytics    from "../pages/Analytics";
 import Profile      from "../pages/Profile";
+import Ledger       from "../pages/Ledger";
 
 export default function AppRoutes() {
   return (
@@ -27,6 +28,7 @@ export default function AppRoutes() {
       <Route path="/statements"  element={<ProtectedRoute><Statements /></ProtectedRoute>} />
       <Route path="/analytics"   element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
       <Route path="/profile"     element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+      <Route path="/ledger"      element={<ProtectedRoute><Ledger /></ProtectedRoute>} />
 
       {/* Default */}
       <Route path="/"  element={<Navigate to="/dashboard" replace />} />

@@ -32,16 +32,12 @@ describe("SBI Parser — parse()", () => {
   });
 
   it("skips opening/closing balance rows", () => {
-    const hasBal = result.some((t) =>
-      t.description.toLowerCase().includes("balance")
-    );
+    const hasBal = result.some((t) => t.description.toLowerCase().includes("balance"));
     expect(hasBal).toBe(false);
   });
 
   it("skips summary/total rows", () => {
-    const hasTotal = result.some((t) =>
-      t.description.toLowerCase().includes("total")
-    );
+    const hasTotal = result.some((t) => t.description.toLowerCase().includes("total"));
     expect(hasTotal).toBe(false);
   });
 

@@ -10,23 +10,29 @@
  */
 
 function detect(text) {
-  return (
-    text.includes("HDFC BANK") ||
-    text.includes("HDFC Bank") ||
-    text.includes("HDB Financial")
-  );
+  return text.includes("HDFC BANK") || text.includes("HDFC Bank") || text.includes("HDB Financial");
 }
 
 const MONTHS = {
-  jan: "01", feb: "02", mar: "03", apr: "04", may: "05", jun: "06",
-  jul: "07", aug: "08", sep: "09", oct: "10", nov: "11", dec: "12",
+  jan: "01",
+  feb: "02",
+  mar: "03",
+  apr: "04",
+  may: "05",
+  jun: "06",
+  jul: "07",
+  aug: "08",
+  sep: "09",
+  oct: "10",
+  nov: "11",
+  dec: "12",
 };
 
 function parseDate(s) {
   const t = s.trim();
   // DD-MMM-YYYY
   const m1 = t.match(/^(\d{2})-([A-Za-z]{3})-(\d{4})$/);
-  if (m1) return `${m1[3]}-${MONTHS[m1[2].toLowerCase()]||"01"}-${m1[1].padStart(2, "0")}`;
+  if (m1) return `${m1[3]}-${MONTHS[m1[2].toLowerCase()] || "01"}-${m1[1].padStart(2, "0")}`;
   // DD/MM/YY
   const m2 = t.match(/^(\d{2})\/(\d{2})\/(\d{2})$/);
   if (m2) return `20${m2[3]}-${m2[2].padStart(2, "0")}-${m2[1].padStart(2, "0")}`;
@@ -41,7 +47,12 @@ function parseDate(s) {
 
 function parseAmount(s) {
   if (!s || s.trim() === "" || s.trim() === "-") return 0;
-  const n = parseFloat(s.replace(/,/g, "").replace(/₹|Rs\.?/gi, "").trim());
+  const n = parseFloat(
+    s
+      .replace(/,/g, "")
+      .replace(/₹|Rs\.?/gi, "")
+      .trim()
+  );
   return isNaN(n) ? 0 : n;
 }
 
@@ -52,8 +63,11 @@ function isValidDate(s) {
 function isHeaderOrSummaryRow(row) {
   const t = row.join(" ").toLowerCase();
   return (
-    t.includes("opening balance") || t.includes("closing balance") ||
-    t.includes("total") || t.includes("brought forward") || t.includes("page")
+    t.includes("opening balance") ||
+    t.includes("closing balance") ||
+    t.includes("total") ||
+    t.includes("brought forward") ||
+    t.includes("page")
   );
 }
 
@@ -63,10 +77,12 @@ function parse(rows) {
   let start = -1;
   for (let i = 0; i < rows.length; i++) {
     const t = rows[i].join(" ").toLowerCase();
-    const hits = ["date", "narration", "withdrawal", "deposit", "balance"]
-        .filter((k) => t.includes(k)).length;
+    const hits = ["date", "narration", "withdrawal", "deposit", "balance"].filter((k) =>
+      t.includes(k)
+    ).length;
     if (hits >= 3) {
-      start = i + 1; break;
+      start = i + 1;
+      break;
     }
   }
   if (start === -1) start = 0;
@@ -82,7 +98,9 @@ function parse(rows) {
     const description = row[1]?.trim() || "";
     if (!description) continue;
 
-    let debit; let credit; let balance;
+    let debit;
+    let credit;
+    let balance;
     if (row.length >= 7) {
       // Standard 7-col: Date|Narration|Chq/Ref|ValueDate|Withdrawal|Deposit|Balance
       debit = parseAmount(row[4]);
@@ -103,7 +121,11 @@ function parse(rows) {
     if (debit === 0 && credit === 0) continue;
 
     transactions.push({
-      date: parseDate(dateStr), description, debit, credit, balance,
+      date: parseDate(dateStr),
+      description,
+      debit,
+      credit,
+      balance,
       type: credit > 0 ? "credit" : "debit",
     });
   }
@@ -111,4 +133,4 @@ function parse(rows) {
   return transactions;
 }
 
-module.exports = {detect, parse};
+module.exports = { detect, parse };

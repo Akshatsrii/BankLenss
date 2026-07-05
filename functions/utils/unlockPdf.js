@@ -1,6 +1,5 @@
 const pdfjsLib = require("pdfjs-dist/legacy/build/pdf.js");
 
-
 const PDF_ERRORS = {
   WRONG_PASSWORD: "WRONG_PASSWORD",
   CORRUPT_PDF: "CORRUPT_PDF",
@@ -31,8 +30,7 @@ function createError(message, code) {
  */
 async function unlockPdf(buffer, password = "") {
   // Convert Node Buffer → Uint8Array (pdfjs requires Uint8Array or ArrayBuffer)
-  const data =
-    buffer instanceof Buffer ? new Uint8Array(buffer) : buffer;
+  const data = buffer instanceof Buffer ? new Uint8Array(buffer) : buffer;
 
   let pdf;
 
@@ -56,8 +54,8 @@ async function unlockPdf(buffer, password = "") {
       err.code === 2 // pdfjs PasswordResponses.INCORRECT_PASSWORD
     ) {
       throw createError(
-          "Incorrect password. Please check and try again.",
-          PDF_ERRORS.WRONG_PASSWORD,
+        "Incorrect password. Please check and try again.",
+        PDF_ERRORS.WRONG_PASSWORD
       );
     }
 
@@ -67,25 +65,16 @@ async function unlockPdf(buffer, password = "") {
       err.message?.toLowerCase().includes("invalid pdf") ||
       err.message?.toLowerCase().includes("not a pdf")
     ) {
-      throw createError(
-          "This file is not a valid PDF or is corrupted.",
-          PDF_ERRORS.CORRUPT_PDF,
-      );
+      throw createError("This file is not a valid PDF or is corrupted.", PDF_ERRORS.CORRUPT_PDF);
     }
 
     // Unknown error — wrap it
-    throw createError(
-        `Failed to open PDF: ${err.message}`,
-        PDF_ERRORS.CORRUPT_PDF,
-    );
+    throw createError(`Failed to open PDF: ${err.message}`, PDF_ERRORS.CORRUPT_PDF);
   }
 
   // Sanity check: PDF opened but has no pages
   if (!pdf || pdf.numPages === 0) {
-    throw createError(
-        "PDF opened successfully but contains no pages.",
-        PDF_ERRORS.EMPTY_PDF,
-    );
+    throw createError("PDF opened successfully but contains no pages.", PDF_ERRORS.EMPTY_PDF);
   }
 
   console.log(`[unlockPdf] Opened PDF — ${pdf.numPages} page(s)`);
@@ -93,4 +82,4 @@ async function unlockPdf(buffer, password = "") {
   return pdf;
 }
 
-module.exports = {unlockPdf, PDF_ERRORS};
+module.exports = { unlockPdf, PDF_ERRORS };

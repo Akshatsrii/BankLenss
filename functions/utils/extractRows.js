@@ -83,16 +83,14 @@ function groupItemsIntoRows(items, tolerance = 3) {
     const itemY = item.y;
 
     // Find existing bucket within tolerance
-    const bucket = buckets.find(
-        (b) => Math.abs(b.y - itemY) <= tolerance,
-    );
+    const bucket = buckets.find((b) => Math.abs(b.y - itemY) <= tolerance);
 
     if (bucket) {
-      bucket.items.push({x: item.x, str: item.str});
+      bucket.items.push({ x: item.x, str: item.str });
     } else {
       buckets.push({
         y: itemY,
-        items: [{x: item.x, str: item.str}],
+        items: [{ x: item.x, str: item.str }],
       });
     }
   }

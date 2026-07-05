@@ -65,14 +65,10 @@ function detectBank(text) {
   for (const bank of BANK_RULES) {
     for (const keywordSet of bank.rules) {
       // All keywords in this set must be present
-      const allMatch = keywordSet.every((keyword) =>
-        upperText.includes(keyword.toUpperCase()),
-      );
+      const allMatch = keywordSet.every((keyword) => upperText.includes(keyword.toUpperCase()));
 
       if (allMatch) {
-        console.log(
-            `[detectBank] Matched: ${bank.name} via keywords [${keywordSet.join(", ")}]`,
-        );
+        console.log(`[detectBank] Matched: ${bank.name} via keywords [${keywordSet.join(", ")}]`);
         return bank.name;
       }
     }
@@ -82,4 +78,4 @@ function detectBank(text) {
   return "UNKNOWN";
 }
 
-module.exports = {detectBank};
+module.exports = { detectBank };

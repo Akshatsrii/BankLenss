@@ -56,6 +56,16 @@ const NAV_LINKS = [
       </svg>
     ),
   },
+  {
+    to: "/ledger",
+    label: "Ledger Book",
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" stroke="currentColor" fill="none" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+      </svg>
+    ),
+  },
 ];
 
 export default function Navbar() {
@@ -91,7 +101,6 @@ export default function Navbar() {
   return (
     <nav
       className="bg-[#0f111a] border-b border-white/[0.07] px-6 h-14 flex items-center gap-0 relative"
-      style={{ fontFamily: "'DM Mono', monospace" }}
     >
       {/* Brand */}
       <div className="flex items-center gap-2.5 mr-8 flex-shrink-0">
@@ -101,7 +110,7 @@ export default function Navbar() {
             <rect x="1" y="2" width="14" height="12" rx="2" fill="none" stroke="white" strokeWidth="1.2" />
           </svg>
         </div>
-        <span className="text-slate-200 text-[15px] font-bold tracking-wide" style={{ fontFamily: "'Syne', sans-serif" }}>
+        <span className="text-slate-200 text-[15px] font-extrabold tracking-wide" style={{ fontFamily: "'Outfit', sans-serif" }}>
           Bank<span className="text-blue-400">Digitizer</span>
         </span>
       </div>

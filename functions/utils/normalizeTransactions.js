@@ -62,11 +62,9 @@ function normalizeTransactions(transactions) {
     });
   }
 
-  console.log(
-      `[normalize] ${transactions.length} raw → ${cleaned.length} valid transactions`,
-  );
+  console.log(`[normalize] ${transactions.length} raw → ${cleaned.length} valid transactions`);
 
   return cleaned;
 }
 
-module.exports = {normalizeTransactions};
+module.exports = { normalizeTransactions };

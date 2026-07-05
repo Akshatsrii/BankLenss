@@ -84,14 +84,7 @@ function logProcessSuccess({
 /**
  * Log a failed processStatement run
  */
-function logProcessError({
-  uploadId,
-  userId,
-  errorType,
-  errorMessage,
-  fileName,
-  durationMs,
-}) {
+function logProcessError({ uploadId, userId, errorType, errorMessage, fileName, durationMs }) {
   log("ERROR", "processStatement", {
     message: "Statement processing failed",
     uploadId,
@@ -106,12 +99,7 @@ function logProcessError({
 /**
  * Log a listTransactions call
  */
-function logListTransactions({
-  userId,
-  filters,
-  resultCount,
-  durationMs,
-}) {
+function logListTransactions({ userId, filters, resultCount, durationMs }) {
   log("INFO", "listTransactions", {
     message: "Transactions listed",
     userId,
@@ -124,7 +112,7 @@ function logListTransactions({
 /**
  * Log a scanned PDF warning
  */
-function logScannedWarning({uploadId, userId, scannedPages}) {
+function logScannedWarning({ uploadId, userId, scannedPages }) {
   log("WARN", "processStatement", {
     message: "Scanned PDF detected — OCR not supported in v1",
     uploadId,

@@ -23,11 +23,7 @@ function hashTransaction(userId, transaction) {
     transaction.credit.toFixed(2),
   ].join("|");
 
-  return crypto
-      .createHash("sha256")
-      .update(raw)
-      .digest("hex")
-      .slice(0, 16);
+  return crypto.createHash("sha256").update(raw).digest("hex").slice(0, 16);
 }
 
-module.exports = {hashTransaction};
+module.exports = { hashTransaction };

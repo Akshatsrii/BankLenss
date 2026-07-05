@@ -11,8 +11,8 @@ import { useNavigate } from "react-router-dom";
 import { httpsCallable } from "firebase/functions";
 import { functions } from "../firebase";
 import {
-  FileText, Eye, Loader2, Upload,
-  TrendingUp, TrendingDown, Calendar,
+  FileText, Eye, Upload,
+  TrendingUp, Calendar,
 } from "lucide-react";
 
 const listStatementsFn = httpsCallable(functions, "listStatements");

@@ -3,6 +3,7 @@
  *
  * Renders paginated transaction rows.
  * Handles loading skeleton, empty state, and error state.
+ * Includes reconciliation status badges and larger page capacities (up to 1000).
  *
  * Props:
  *   data              - transaction[]
@@ -14,6 +15,8 @@
  *   totalPages        - number
  *   onPageChange      - (page: number) => void
  *   onPageSizeChange  - (size: number) => void
+ *   onShowMatchDetails - (transaction: object) => void
+ *   onCreateQuickMatch - (transaction: object) => void
  */
 
 import {
@@ -21,6 +24,8 @@ import {
   ChevronRight,
   ArrowDownCircle,
   ArrowUpCircle,
+  CheckCircle,
+  HelpCircle,
 } from "lucide-react";
 
 // ── Amount formatter ───────────────────────────────────────────
@@ -36,7 +41,7 @@ function formatAmount(amount) {
 function SkeletonRow() {
   return (
     <tr className="border-b border-slate-800">
-      {[40, 140, 90, 90, 90, 60].map((w, i) => (
+      {[40, 140, 90, 90, 90, 60, 80].map((w, i) => (
         <td key={i} className="px-4 py-3.5">
           <div
             className="h-3.5 bg-slate-800 rounded animate-pulse"
@@ -147,7 +152,6 @@ function Pagination({ page, totalPages, onPageChange, disabled }) {
 }
 
 // ── Column definitions ─────────────────────────────────────────
-// className controls responsive visibility
 const HEADERS = [
   { label: "Date",        className: "" },
   { label: "Description", className: "" },
@@ -155,6 +159,7 @@ const HEADERS = [
   { label: "Credit",      className: "" },
   { label: "Balance",     className: "hidden md:table-cell" },
   { label: "Type",        className: "hidden sm:table-cell" },
+  { label: "Reconciliation", className: "" },
 ];
 
 // ── Main component ─────────────────────────────────────────────
@@ -168,6 +173,8 @@ export default function TransactionTable({
   totalPages,
   onPageChange,
   onPageSizeChange,
+  onShowMatchDetails,
+  onCreateQuickMatch,
 }) {
   // ── Error state ──────────────────────────────────────────────
   if (error) {
@@ -299,6 +306,34 @@ export default function TransactionTable({
                     {t.type === "credit" ? "Credit" : "Debit"}
                   </div>
                 </td>
+
+                {/* Status Column */}
+                <td className="px-4 py-3.5 whitespace-nowrap">
+                  {t.status === "matched" ? (
+                    <button
+                      onClick={() => onShowMatchDetails && onShowMatchDetails(t)}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1
+                                 rounded-full text-xs font-semibold
+                                 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20
+                                 hover:bg-emerald-500/20 transition-all select-none"
+                    >
+                      <CheckCircle size={11} />
+                      Matched
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => onCreateQuickMatch && onCreateQuickMatch(t)}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1
+                                 rounded-full text-xs font-semibold
+                                 bg-amber-500/10 text-amber-400 border border-amber-500/20
+                                 hover:bg-amber-500/20 transition-all select-none"
+                      title="Click to quickly match / create ledger record"
+                    >
+                      <HelpCircle size={11} />
+                      Unmatched
+                    </button>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -322,7 +357,7 @@ export default function TransactionTable({
                            px-2 py-1 text-sm text-slate-200 outline-none
                            focus:border-blue-500 cursor-pointer"
               >
-                {[10, 25, 50, 100].map((n) => (
+                {[10, 25, 50, 100, 250, 500, 1000].map((n) => (
                   <option key={n} value={n}>
                     {n}
                   </option>

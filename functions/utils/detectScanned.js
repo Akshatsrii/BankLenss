@@ -17,9 +17,9 @@ const MIN_CHARS_PER_PAGE = 50; // pages with fewer chars are likely scanned
 async function isPageScanned(page) {
   const content = await page.getTextContent();
   const text = content.items
-      .map((item) => item.str)
-      .join("")
-      .trim();
+    .map((item) => item.str)
+    .join("")
+    .trim();
   return text.length < MIN_CHARS_PER_PAGE;
 }
 
@@ -42,12 +42,12 @@ async function detectScanned(pdf) {
 
   if (isScanned) {
     console.warn(
-        `[detectScanned] Scanned pages detected: [${scannedPages.join(", ")}]. ` +
-      `OCR is not supported in v1.`,
+      `[detectScanned] Scanned pages detected: [${scannedPages.join(", ")}]. ` +
+        `OCR is not supported in v1.`
     );
   }
 
-  return {isScanned, scannedPages};
+  return { isScanned, scannedPages };
 }
 
-module.exports = {detectScanned};
+module.exports = { detectScanned };

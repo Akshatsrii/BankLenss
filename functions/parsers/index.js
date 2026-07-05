@@ -7,19 +7,19 @@
  * - Structured logging via logger
  */
 
-const {unlockPdf, PDF_ERRORS} = require("../utils/unlockPdf");
-const {extractFullText, extractAllRows} = require("../utils/extractRows");
-const {detectBank} = require("../utils/detectBank");
-const {detectScanned} = require("../utils/detectScanned");
-const {normalizeTransactions} = require("../utils/normalizeTransactions");
-const {categorizeAll} = require("../utils/categorize");
+const { unlockPdf, PDF_ERRORS } = require("../utils/unlockPdf");
+const { extractFullText, extractAllRows } = require("../utils/extractRows");
+const { detectBank } = require("../utils/detectBank");
+const { detectScanned } = require("../utils/detectScanned");
+const { normalizeTransactions } = require("../utils/normalizeTransactions");
+const { categorizeAll } = require("../utils/categorize");
 
 const sbi = require("./sbi");
 const hdfc = require("./hdfc");
 const icici = require("./icici");
 const axis = require("./axis");
 
-const PARSER_MAP = {SBI: sbi, HDFC: hdfc, ICICI: icici, AXIS: axis};
+const PARSER_MAP = { SBI: sbi, HDFC: hdfc, ICICI: icici, AXIS: axis };
 
 const ERRORS = {
   ...PDF_ERRORS,
@@ -39,19 +39,20 @@ async function parseStatement(buffer, password) {
   const pdf = await unlockPdf(buffer, password);
 
   // Step 2: Scanned PDF check
-  const {isScanned, scannedPages} = await detectScanned(pdf);
+  const { isScanned, scannedPages } = await detectScanned(pdf);
 
   if (isScanned) {
-    const warning = `This looks like a scanned PDF (pages: ${scannedPages.join(", ")}). ` +
-                    `OCR is not supported in v1 — some transactions may be missing.`;
-    warnings.push({type: "SCANNED_PDF", message: warning, scannedPages});
+    const warning =
+      `This looks like a scanned PDF (pages: ${scannedPages.join(", ")}). ` +
+      `OCR is not supported in v1 — some transactions may be missing.`;
+    warnings.push({ type: "SCANNED_PDF", message: warning, scannedPages });
     console.warn("[parseStatement]", warning);
 
     // If ALL pages are scanned, throw — nothing can be extracted
     if (scannedPages.length === pdf.numPages) {
       const error = new Error(
-          "This PDF appears to be fully scanned (image-only). " +
-        "OCR is not supported in v1. Please upload a text-based PDF statement.",
+        "This PDF appears to be fully scanned (image-only). " +
+          "OCR is not supported in v1. Please upload a text-based PDF statement."
       );
       error.code = ERRORS.SCANNED_PDF;
       throw error;
@@ -65,9 +66,7 @@ async function parseStatement(buffer, password) {
   const bankName = detectBank(fullText);
 
   if (bankName === "UNKNOWN") {
-    const error = new Error(
-        "Bank format not supported. Supported: SBI, HDFC, ICICI, AXIS.",
-    );
+    const error = new Error("Bank format not supported. Supported: SBI, HDFC, ICICI, AXIS.");
     error.code = ERRORS.UNSUPPORTED_BANK;
     throw error;
   }
@@ -88,12 +87,12 @@ async function parseStatement(buffer, password) {
   const transactions = categorizeAll(normalized);
 
   console.log(
-      `[parseStatement] Done — ${bankName} | ` +
-    `${transactions.length} transactions | ` +
-    `warnings: ${warnings.length}`,
+    `[parseStatement] Done — ${bankName} | ` +
+      `${transactions.length} transactions | ` +
+      `warnings: ${warnings.length}`
   );
 
-  return {bank: bankName, transactions, warnings};
+  return { bank: bankName, transactions, warnings };
 }
 
-module.exports = {parseStatement, ERRORS};
+module.exports = { parseStatement, ERRORS };

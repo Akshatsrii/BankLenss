@@ -5,16 +5,16 @@
  * Used to populate the statement selector dropdown.
  */
 
-const {getFirestore} = require("firebase-admin/firestore");
+const { getFirestore } = require("firebase-admin/firestore");
 
 async function listStatements(userId) {
   const db = getFirestore();
 
   const snapshot = await db
-      .collection("statements")
-      .where("userId", "==", userId)
-      .orderBy("uploadedAt", "desc")
-      .get();
+    .collection("statements")
+    .where("userId", "==", userId)
+    .orderBy("uploadedAt", "desc")
+    .get();
 
   return snapshot.docs.map((doc) => {
     const d = doc.data();
@@ -29,4 +29,4 @@ async function listStatements(userId) {
   });
 }
 
-module.exports = {listStatements};
+module.exports = { listStatements };

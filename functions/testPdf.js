@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const {parseStatement, ERRORS} = require("./parsers");
+const { parseStatement, ERRORS } = require("./parsers");
 
 async function test() {
   const pdfPath = process.argv[2];

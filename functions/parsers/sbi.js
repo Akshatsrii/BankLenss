@@ -10,11 +10,7 @@
  */
 
 function detect(text) {
-  return (
-    text.includes("State Bank of India") ||
-    text.includes("SBI") ||
-    text.includes("SBIN")
-  );
+  return text.includes("State Bank of India") || text.includes("SBI") || text.includes("SBIN");
 }
 
 function parseDate(s) {
@@ -32,10 +28,10 @@ function parseAmount(s) {
   if (!s || s.trim() === "" || s.trim() === "-") return 0;
   // Remove commas, Dr/Cr suffix, currency symbols
   const cleaned = s
-      .replace(/,/g, "")
-      .replace(/Dr\.?|Cr\.?/gi, "")
-      .replace(/₹|Rs\.?/gi, "")
-      .trim();
+    .replace(/,/g, "")
+    .replace(/Dr\.?|Cr\.?/gi, "")
+    .replace(/₹|Rs\.?/gi, "")
+    .trim();
   const n = parseFloat(cleaned);
   return isNaN(n) ? 0 : n;
 }
@@ -63,10 +59,12 @@ function parse(rows) {
   let start = -1;
   for (let i = 0; i < rows.length; i++) {
     const t = rows[i].join(" ").toLowerCase();
-    const hits = ["date", "description", "narration", "debit", "credit", "balance"]
-        .filter((k) => t.includes(k)).length;
+    const hits = ["date", "description", "narration", "debit", "credit", "balance"].filter((k) =>
+      t.includes(k)
+    ).length;
     if (hits >= 3) {
-      start = i + 1; break;
+      start = i + 1;
+      break;
     }
   }
   if (start === -1) start = 0;
@@ -83,7 +81,9 @@ function parse(rows) {
     if (!description) continue;
 
     // Handle both 5-col and 6-col layouts
-    let debit; let credit; let balance;
+    let debit;
+    let credit;
+    let balance;
     if (row.length >= 6) {
       // 6-col: Date | Desc | Ref | Debit | Credit | Balance
       debit = parseAmount(row[3]);
@@ -109,10 +109,10 @@ function parse(rows) {
 
     if (debit === 0 && credit === 0) continue;
 
-    transactions.push({date: parseDate(dateStr), description, debit, credit, balance, type});
+    transactions.push({ date: parseDate(dateStr), description, debit, credit, balance, type });
   }
 
   return transactions;
 }
 
-module.exports = {detect, parse};
+module.exports = { detect, parse };

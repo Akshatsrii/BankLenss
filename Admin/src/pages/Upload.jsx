@@ -192,17 +192,16 @@ export default function Upload() {
 
   return (
     <div
-      className="min-h-screen bg-[#080a12] text-slate-300 px-6 py-8"
-      style={{ fontFamily: "'DM Mono', monospace" }}
+      className="min-h-screen bg-[#0A0E17] text-slate-300 px-6 py-8 font-sans"
     >
       {/* Header */}
       <div className="mb-8">
-        <p className="text-[11px] text-slate-600 uppercase tracking-widest mb-1">
+        <p className="text-[11px] text-slate-600 uppercase tracking-widest mb-1 font-semibold">
           OCR Pipeline
         </p>
         <h1
-          className="text-2xl font-bold text-slate-100"
-          style={{ fontFamily: "'Syne', sans-serif" }}
+          className="text-2xl font-bold text-white tracking-tight"
+          style={{ fontFamily: "'Outfit', sans-serif" }}
         >
           Upload Statement
         </h1>
