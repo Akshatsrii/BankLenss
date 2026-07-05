@@ -1,4 +1,16 @@
 import { useState } from "react";
+import { Download, FileDown } from "lucide-react";
+
+const INK        = "#0A0E17";
+const SURFACE    = "#12161F";
+const BORDER     = "#1F2530";
+const BORDER_SOFT= "#1B202B";
+const GOLD       = "#C9A227";
+const GOLD_SOFT  = "#D9B65A";
+const TEXT       = "#EDEFF3";
+const TEXT_DIM   = "#9AA1B2";
+const TEXT_FAINT = "#5F6678";
+const GREEN      = "#34D399";
 
 const FORMATS = [
   {
@@ -79,163 +91,267 @@ export default function Export() {
 
   return (
     <div
-      className="min-h-screen bg-[#080a12] text-slate-300 px-6 py-8"
-      style={{ fontFamily: "'DM Mono', monospace" }}
+      className="min-h-screen px-6 py-8 relative overflow-hidden"
+      style={{ backgroundColor: INK, color: TEXT_DIM, fontFamily: "'Inter', sans-serif" }}
     >
-      {/* Header */}
-      <div className="mb-8">
-        <p className="text-[11px] text-slate-600 uppercase tracking-widest mb-1">Data</p>
-        <h1
-          className="text-2xl font-bold text-slate-100"
-          style={{ fontFamily: "'Syne', sans-serif" }}
-        >
-          Export
-        </h1>
-      </div>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes floatSlow { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-5px); } }
+        @keyframes livePulse {
+          0%   { box-shadow: 0 0 0 0 ${GREEN}66; }
+          70%  { box-shadow: 0 0 0 6px ${GREEN}00; }
+          100% { box-shadow: 0 0 0 0 ${GREEN}00; }
+        }
+      `}</style>
 
-      <div className="grid md:grid-cols-2 gap-4 max-w-4xl">
-        {/* Format Picker */}
-        <div className="bg-[#0f111a] border border-white/[0.06] rounded-xl p-5">
-          <p className="text-[11px] text-slate-600 uppercase tracking-widest mb-4">
-            Format
-          </p>
-          <div className="space-y-2">
-            {FORMATS.map((f) => (
-              <button
-                key={f.id}
-                onClick={() => setFormat(f.id)}
-                className={`w-full flex items-start gap-3 p-3 rounded-lg border text-left transition-all duration-150 ${
-                  format === f.id
-                    ? "border-blue-500/40 bg-blue-500/8 text-slate-100"
-                    : "border-white/[0.05] bg-white/[0.01] text-slate-400 hover:border-white/10 hover:text-slate-300"
-                }`}
-              >
-                <span className={format === f.id ? "text-blue-400" : "text-slate-600"}>
-                  {f.icon}
-                </span>
-                <div>
-                  <p className="text-[12px] font-medium mb-0.5">{f.label}</p>
-                  <p className="text-[11px] text-slate-500 leading-relaxed">{f.desc}</p>
-                </div>
-                {format === f.id && (
-                  <span className="ml-auto mt-0.5">
-                    <svg className="w-4 h-4 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                  </span>
-                )}
-              </button>
-            ))}
+      {/* Ambient glow accents */}
+      <div
+        className="absolute -top-24 -right-24 w-[26rem] h-[26rem] rounded-full pointer-events-none"
+        style={{ background: `radial-gradient(circle, ${GOLD}12, transparent 70%)` }}
+      />
+      <div
+        className="absolute bottom-0 -left-32 w-80 h-80 rounded-full pointer-events-none"
+        style={{ background: `radial-gradient(circle, #60A5FA0D, transparent 70%)` }}
+      />
+
+      <div className="relative">
+        {/* Header */}
+        <div
+          className="mb-8 flex items-center gap-3"
+          style={{ animation: "fadeUp 0.45s ease both" }}
+        >
+          <div
+            className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0"
+            style={{
+              backgroundColor: `${GOLD}1A`,
+              border: `1px solid ${GOLD}40`,
+              animation: "floatSlow 4.5s ease-in-out infinite",
+            }}
+          >
+            <FileDown size={19} style={{ color: GOLD_SOFT }} />
+          </div>
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.18em] mb-0.5" style={{ color: GOLD_SOFT }}>Data</p>
+            <h1
+              className="text-2xl font-semibold"
+              style={{ fontFamily: "'Fraunces', serif", color: TEXT }}
+            >
+              Export
+            </h1>
           </div>
         </div>
 
-        <div className="flex flex-col gap-4">
-          {/* Date Range */}
-          <div className="bg-[#0f111a] border border-white/[0.06] rounded-xl p-5">
-            <p className="text-[11px] text-slate-600 uppercase tracking-widest mb-4">
-              Date Range
+        <div className="grid md:grid-cols-2 gap-4 max-w-4xl relative">
+          {/* Format Picker */}
+          <div
+            className="rounded-xl p-5 transition-shadow duration-300"
+            style={{
+              backgroundColor: SURFACE, border: `1px solid ${BORDER}`,
+              animation: "fadeUp 0.5s ease both", animationDelay: "60ms",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.boxShadow = "0 16px 36px -20px rgba(0,0,0,0.55)")}
+            onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "none")}
+          >
+            <p className="text-[11px] uppercase tracking-widest mb-4" style={{ color: GOLD_SOFT }}>
+              Format
             </p>
-            <div className="flex flex-wrap gap-2">
-              {DATE_RANGES.map((r) => (
+            <div className="space-y-2">
+              {FORMATS.map((f, i) => (
                 <button
-                  key={r}
-                  onClick={() => setRange(r)}
-                  className={`px-3 py-1.5 rounded-md text-[11px] border transition-all duration-150 ${
-                    range === r
-                      ? "border-blue-500/40 bg-blue-500/10 text-blue-300"
-                      : "border-white/[0.06] text-slate-500 hover:text-slate-300 hover:border-white/10"
-                  }`}
+                  key={f.id}
+                  onClick={() => setFormat(f.id)}
+                  className="w-full flex items-start gap-3 p-3 rounded-lg border text-left transition-all duration-200"
+                  style={{
+                    borderColor: format === f.id ? `${GOLD}55` : BORDER_SOFT,
+                    backgroundColor: format === f.id ? `${GOLD}12` : "rgba(255,255,255,0.01)",
+                    color: format === f.id ? TEXT : TEXT_FAINT,
+                    animation: "fadeUp 0.4s ease both",
+                    animationDelay: `${100 + i * 50}ms`,
+                  }}
+                  onMouseEnter={(e) => {
+                    if (format !== f.id) e.currentTarget.style.borderColor = "#2A3040";
+                  }}
+                  onMouseLeave={(e) => {
+                    if (format !== f.id) e.currentTarget.style.borderColor = BORDER_SOFT;
+                  }}
                 >
-                  {r}
+                  <span style={{ color: format === f.id ? GOLD_SOFT : TEXT_FAINT }}>
+                    {f.icon}
+                  </span>
+                  <div>
+                    <p className="text-[12px] font-medium mb-0.5">{f.label}</p>
+                    <p className="text-[11px] leading-relaxed" style={{ color: TEXT_FAINT }}>{f.desc}</p>
+                  </div>
+                  {format === f.id && (
+                    <span className="ml-auto mt-0.5">
+                      <svg className="w-4 h-4" style={{ color: GOLD_SOFT }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Fields */}
-          <div className="bg-[#0f111a] border border-white/[0.06] rounded-xl p-5">
-            <p className="text-[11px] text-slate-600 uppercase tracking-widest mb-4">
-              Fields to include
-            </p>
-            <div className="grid grid-cols-2 gap-y-2 gap-x-3">
-              {FIELDS.map((f) => (
-                <label
-                  key={f}
-                  className="flex items-center gap-2 cursor-pointer group"
-                >
-                  <div
-                    onClick={() => toggleField(f)}
-                    className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-all duration-150 ${
-                      fields.includes(f)
-                        ? "border-blue-500 bg-blue-500"
-                        : "border-white/20 bg-transparent group-hover:border-white/30"
-                    }`}
-                  >
-                    {fields.includes(f) && (
-                      <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3}>
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                    )}
-                  </div>
-                  <span
-                    className={`text-[11px] transition-colors ${
-                      fields.includes(f) ? "text-slate-300" : "text-slate-500"
-                    }`}
-                    onClick={() => toggleField(f)}
-                  >
-                    {f}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Summary + Export Button */}
-          <div className="bg-[#0f111a] border border-white/[0.06] rounded-xl p-5">
-            <div className="flex items-center justify-between text-[11px] text-slate-500 mb-1">
-              <span>Format</span>
-              <span className="text-slate-300 uppercase">{format}</span>
-            </div>
-            <div className="flex items-center justify-between text-[11px] text-slate-500 mb-1">
-              <span>Range</span>
-              <span className="text-slate-300">{range}</span>
-            </div>
-            <div className="flex items-center justify-between text-[11px] text-slate-500 mb-4">
-              <span>Fields</span>
-              <span className="text-slate-300">{fields.length} selected</span>
-            </div>
-
-            <button
-              onClick={handleExport}
-              disabled={exporting || fields.length === 0}
-              className={`w-full py-2.5 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2 ${
-                done
-                  ? "bg-emerald-500/20 border border-emerald-500/30 text-emerald-400"
-                  : exporting
-                  ? "bg-blue-500/10 border border-blue-500/20 text-blue-400 cursor-wait"
-                  : fields.length === 0
-                  ? "bg-white/5 border border-white/10 text-slate-600 cursor-not-allowed"
-                  : "bg-blue-500 hover:bg-blue-400 text-white border border-blue-500"
-              }`}
+          <div className="flex flex-col gap-4">
+            {/* Date Range */}
+            <div
+              className="rounded-xl p-5 transition-shadow duration-300"
+              style={{
+                backgroundColor: SURFACE, border: `1px solid ${BORDER}`,
+                animation: "fadeUp 0.5s ease both", animationDelay: "120ms",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.boxShadow = "0 16px 36px -20px rgba(0,0,0,0.55)")}
+              onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "none")}
             >
-              {done ? (
-                <>
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polyline points="20 6 9 17 4 12" /></svg>
-                  Downloaded!
-                </>
-              ) : exporting ? (
-                <>
-                  <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="10" strokeOpacity="0.25" /><path d="M12 2a10 10 0 0110 10" /></svg>
-                  Preparing…
-                </>
-              ) : (
-                <>
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>
-                  Export {format.toUpperCase()}
-                </>
-              )}
-            </button>
+              <p className="text-[11px] uppercase tracking-widest mb-4" style={{ color: GOLD_SOFT }}>
+                Date Range
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {DATE_RANGES.map((r) => (
+                  <button
+                    key={r}
+                    onClick={() => setRange(r)}
+                    className="px-3 py-1.5 rounded-md text-[11px] border transition-all duration-200"
+                    style={{
+                      borderColor: range === r ? `${GOLD}55` : BORDER_SOFT,
+                      backgroundColor: range === r ? `${GOLD}12` : "transparent",
+                      color: range === r ? GOLD_SOFT : TEXT_FAINT,
+                    }}
+                    onMouseEnter={(e) => {
+                      if (range !== r) e.currentTarget.style.color = TEXT_DIM;
+                    }}
+                    onMouseLeave={(e) => {
+                      if (range !== r) e.currentTarget.style.color = TEXT_FAINT;
+                    }}
+                  >
+                    {r}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Fields */}
+            <div
+              className="rounded-xl p-5 transition-shadow duration-300"
+              style={{
+                backgroundColor: SURFACE, border: `1px solid ${BORDER}`,
+                animation: "fadeUp 0.5s ease both", animationDelay: "180ms",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.boxShadow = "0 16px 36px -20px rgba(0,0,0,0.55)")}
+              onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "none")}
+            >
+              <p className="text-[11px] uppercase tracking-widest mb-4" style={{ color: GOLD_SOFT }}>
+                Fields to include
+              </p>
+              <div className="grid grid-cols-2 gap-y-2 gap-x-3">
+                {FIELDS.map((f) => (
+                  <label
+                    key={f}
+                    className="flex items-center gap-2 cursor-pointer group"
+                  >
+                    <div
+                      onClick={() => toggleField(f)}
+                      className="w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-all duration-200"
+                      style={{
+                        borderColor: fields.includes(f) ? GOLD : "rgba(255,255,255,0.2)",
+                        backgroundColor: fields.includes(f) ? GOLD : "transparent",
+                      }}
+                    >
+                      {fields.includes(f) && (
+                        <svg className="w-2.5 h-2.5" style={{ color: INK }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3}>
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      )}
+                    </div>
+                    <span
+                      className="text-[11px] transition-colors"
+                      style={{ color: fields.includes(f) ? TEXT_DIM : TEXT_FAINT }}
+                      onClick={() => toggleField(f)}
+                    >
+                      {f}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Summary + Export Button */}
+            <div
+              className="rounded-xl p-5 transition-shadow duration-300"
+              style={{
+                backgroundColor: SURFACE, border: `1px solid ${BORDER}`,
+                animation: "fadeUp 0.5s ease both", animationDelay: "240ms",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.boxShadow = "0 16px 36px -20px rgba(0,0,0,0.55)")}
+              onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "none")}
+            >
+              <div className="flex items-center justify-between text-[11px] mb-1" style={{ color: TEXT_FAINT }}>
+                <span>Format</span>
+                <span className="uppercase" style={{ color: TEXT_DIM, fontFamily: "'IBM Plex Mono', monospace" }}>{format}</span>
+              </div>
+              <div className="flex items-center justify-between text-[11px] mb-1" style={{ color: TEXT_FAINT }}>
+                <span>Range</span>
+                <span style={{ color: TEXT_DIM }}>{range}</span>
+              </div>
+              <div className="flex items-center justify-between text-[11px] mb-4" style={{ color: TEXT_FAINT }}>
+                <span>Fields</span>
+                <span style={{ color: TEXT_DIM, fontFamily: "'IBM Plex Mono', monospace" }}>{fields.length} selected</span>
+              </div>
+
+              <button
+                onClick={handleExport}
+                disabled={exporting || fields.length === 0}
+                className="w-full py-2.5 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2 relative overflow-hidden"
+                style={
+                  done
+                    ? { backgroundColor: `${GREEN}20`, border: `1px solid ${GREEN}40`, color: GREEN }
+                    : exporting
+                    ? { backgroundColor: `${GOLD}14`, border: `1px solid ${GOLD}30`, color: GOLD_SOFT, cursor: "wait" }
+                    : fields.length === 0
+                    ? { backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#3A4152", cursor: "not-allowed" }
+                    : { backgroundColor: GOLD, border: `1px solid ${GOLD}`, color: INK }
+                }
+                onMouseEnter={(e) => {
+                  if (!exporting && !done && fields.length > 0) e.currentTarget.style.backgroundColor = GOLD_SOFT;
+                }}
+                onMouseLeave={(e) => {
+                  if (!exporting && !done && fields.length > 0) e.currentTarget.style.backgroundColor = GOLD;
+                }}
+              >
+                {done ? (
+                  <>
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polyline points="20 6 9 17 4 12" /></svg>
+                    Downloaded!
+                  </>
+                ) : exporting ? (
+                  <>
+                    <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="10" strokeOpacity="0.25" /><path d="M12 2a10 10 0 0110 10" /></svg>
+                    Preparing…
+                  </>
+                ) : (
+                  <>
+                    <Download size={16} />
+                    Export {format.toUpperCase()}
+                  </>
+                )}
+              </button>
+            </div>
           </div>
+        </div>
+
+        {/* Small footer accent, consistent with Dashboard / Analytics */}
+        <div
+          className="flex items-center justify-center gap-2 pt-8 pb-1 text-[11px]"
+          style={{ color: TEXT_FAINT, animation: "fadeUp 0.55s ease both", animationDelay: "320ms" }}
+        >
+          <span
+            className="w-1.5 h-1.5 rounded-full"
+            style={{ backgroundColor: GREEN, animation: "livePulse 2s infinite" }}
+          />
+          Ledger exports · encrypted end-to-end
         </div>
       </div>
     </div>
