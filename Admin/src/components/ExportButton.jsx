@@ -17,6 +17,12 @@ import * as XLSX from "xlsx";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 
+const GOLD       = "#C9A227";
+const GOLD_SOFT  = "#D9B65A";
+const BORDER_SOFT= "#1B202B";
+const TEXT_FAINT = "#5F6678";
+const GREEN      = "#34D399";
+
 const listTransactionsFn = httpsCallable(functions, "listTransactions");
 
 /**
@@ -198,17 +204,31 @@ export default function ExportButton({ filters, disabled }) {
   const loading = exportType !== null;
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2" style={{ fontFamily: "'Inter', sans-serif" }}>
       {/* Excel Download */}
       <button
         onClick={() => handleExport("xlsx")}
         disabled={disabled || loading}
-        className="flex items-center gap-2 px-3.5 py-2 rounded-xl
-                   bg-emerald-600/15 hover:bg-emerald-600/25
-                   border border-emerald-500/20 hover:border-emerald-500/40
-                   text-emerald-400 text-xs font-semibold
-                   transition-all duration-150 disabled:opacity-40
+        className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold
+                   transition-all duration-200 disabled:opacity-40
                    disabled:cursor-not-allowed cursor-pointer"
+        style={{
+          backgroundColor: exportType === "xlsx" ? `${GREEN}20` : `${GREEN}12`,
+          border: `1px solid ${GREEN}${exportType === "xlsx" ? "55" : "30"}`,
+          color: GREEN,
+        }}
+        onMouseEnter={(e) => {
+          if (!(disabled || loading)) {
+            e.currentTarget.style.backgroundColor = `${GREEN}20`;
+            e.currentTarget.style.borderColor = `${GREEN}55`;
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!(disabled || loading)) {
+            e.currentTarget.style.backgroundColor = `${GREEN}12`;
+            e.currentTarget.style.borderColor = `${GREEN}30`;
+          }
+        }}
         title="Download transactions as Excel Sheet"
       >
         {loading && exportType === "xlsx" ? (
@@ -223,12 +243,26 @@ export default function ExportButton({ filters, disabled }) {
       <button
         onClick={() => handleExport("pdf")}
         disabled={disabled || loading}
-        className="flex items-center gap-2 px-3.5 py-2 rounded-xl
-                   bg-blue-600/15 hover:bg-blue-600/25
-                   border border-blue-500/20 hover:border-blue-500/40
-                   text-blue-400 text-xs font-semibold
-                   transition-all duration-150 disabled:opacity-40
+        className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold
+                   transition-all duration-200 disabled:opacity-40
                    disabled:cursor-not-allowed cursor-pointer"
+        style={{
+          backgroundColor: exportType === "pdf" ? `${GOLD}1A` : `${GOLD}12`,
+          border: `1px solid ${GOLD}${exportType === "pdf" ? "55" : "30"}`,
+          color: GOLD_SOFT,
+        }}
+        onMouseEnter={(e) => {
+          if (!(disabled || loading)) {
+            e.currentTarget.style.backgroundColor = `${GOLD}1A`;
+            e.currentTarget.style.borderColor = `${GOLD}55`;
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!(disabled || loading)) {
+            e.currentTarget.style.backgroundColor = `${GOLD}12`;
+            e.currentTarget.style.borderColor = `${GOLD}30`;
+          }
+        }}
         title="Download transactions as PDF Report"
       >
         {loading && exportType === "pdf" ? (
