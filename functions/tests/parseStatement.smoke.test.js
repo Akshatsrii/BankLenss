@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { readFileSync, existsSync } from "fs";
+import { readFileSync, existsSync, statSync } from "fs";
 import { resolve } from "path";
 import { parseStatement, ERRORS } from "../parsers/index.js";
 
@@ -28,9 +28,17 @@ describe("parseStatement — smoke tests", () => {
   for (const sample of SAMPLES) {
     const pdfPath = resolve(__dirname, sample.file);
     const fileExists = existsSync(pdfPath);
+    
+    let isPlaceholder = false;
+    if (fileExists) {
+      const stats = statSync(pdfPath);
+      if (stats.size < 5000) {
+        isPlaceholder = true;
+      }
+    }
 
-    // Skip if file not present (CI environment)
-    const testFn = fileExists ? it : it.skip;
+    // Skip if file not present or is a small placeholder
+    const testFn = (fileExists && !isPlaceholder) ? it : it.skip;
 
     testFn(
       `${sample.bank}: opens and extracts transactions`,

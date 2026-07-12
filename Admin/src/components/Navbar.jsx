@@ -3,8 +3,6 @@ import { useState, useEffect } from "react";
 import { signOut } from "firebase/auth";
 import { auth } from "../firebase";
 import { useAuth } from "../hooks/useAuth";
-import { useTheme } from "../hooks/useTheme";
-import { Sun, Moon } from "lucide-react";
 
 const INK        = "#0A0E17";
 const BORDER_SOFT= "#1B202B";
@@ -82,7 +80,6 @@ export default function Navbar() {
   const { pathname }      = useLocation();
   const navigate          = useNavigate();
   const { user }          = useAuth();
-  const { isDark, toggle } = useTheme();
 
   const [time, setTime]         = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
@@ -171,18 +168,6 @@ export default function Navbar() {
 
       {/* Right side */}
       <div className="flex items-center gap-3 ml-auto flex-shrink-0">
-
-        {/* Theme toggle */}
-        <button
-          onClick={toggle}
-          className="hidden md:flex items-center justify-center w-8 h-8 rounded-lg transition-colors duration-150"
-          style={{ border: `1px solid ${BORDER_SOFT}`, backgroundColor: "rgba(255,255,255,0.02)", color: TEXT_FAINT }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = TEXT_DIM)}
-          onMouseLeave={(e) => (e.currentTarget.style.color = TEXT_FAINT)}
-          title={isDark ? "Switch to light mode" : "Switch to dark mode"}
-        >
-          {isDark ? <Sun size={14} /> : <Moon size={14} />}
-        </button>
 
         {user && <div className="hidden md:block w-px h-5" style={{ backgroundColor: BORDER_SOFT }} />}
 

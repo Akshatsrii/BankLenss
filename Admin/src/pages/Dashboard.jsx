@@ -8,16 +8,12 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { httpsCallable } from "firebase/functions";
-import { functions } from "../firebase";
+import { listTransactions as listTransactionsFn, listStatements as listStatementsFn } from "../services/api";
 import {
   TrendingUp, TrendingDown, Upload,
   ArrowUpCircle, ArrowDownCircle, RefreshCw,
   Landmark, ShieldCheck, Sparkles,
 } from "lucide-react";
-
-const listTransactionsFn = httpsCallable(functions, "listTransactions");
-const listStatementsFn   = httpsCallable(functions, "listStatements");
 
 // Free-to-use bank exterior photograph (Unsplash License — no attribution required)
 const HERO_IMAGE =

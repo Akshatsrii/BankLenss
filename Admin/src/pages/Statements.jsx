@@ -8,14 +8,11 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { httpsCallable } from "firebase/functions";
-import { functions } from "../firebase";
+import { listStatements as listStatementsFn } from "../services/api";
 import {
   FileText, Eye, Upload,
   TrendingUp, Calendar, Landmark,
 } from "lucide-react";
-
-const listStatementsFn = httpsCallable(functions, "listStatements");
 
 const INK        = "#0A0E17";
 const SURFACE    = "#12161F";

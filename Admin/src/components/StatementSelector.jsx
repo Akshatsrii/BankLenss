@@ -6,8 +6,7 @@
  */
 
 import { useState, useEffect } from "react";
-import { httpsCallable } from "firebase/functions";
-import { functions } from "../firebase";
+import { listStatements as listStatementsFn } from "../services/api";
 import { FileText, ChevronDown, Loader2 } from "lucide-react";
 
 const INK        = "#0A0E17";
@@ -17,8 +16,6 @@ const GOLD_SOFT  = "#D9B65A";
 const TEXT       = "#EDEFF3";
 const TEXT_FAINT = "#5F6678";
 const RED        = "#F87171";
-
-const listStatementsFn = httpsCallable(functions, "listStatements");
 
 function formatDate(iso) {
   if (!iso) return "";

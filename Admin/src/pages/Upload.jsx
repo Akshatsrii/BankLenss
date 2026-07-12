@@ -1,15 +1,13 @@
 import { useState, useRef, useCallback } from "react";
-import { ref, uploadBytesResumable } from "firebase/storage";
-import { httpsCallable } from "firebase/functions";
 import { getAuth } from "firebase/auth";
-import { storage, functions } from "../firebase";
+import { processStatement } from "../services/api";
 import { UploadCloud as UploadCloudIcon, FileText, Landmark } from "lucide-react";
 
 const ACCEPTED = ["application/pdf"];
 const MAX_MB = 20;
 
 const STEPS = [
-  { id: "upload",   label: "Upload to Storage" },
+  { id: "upload",   label: "Read Statement File" },
   { id: "unlock",   label: "Unlock PDF"         },
   { id: "detect",   label: "Detect Bank"        },
   { id: "parse",    label: "Parse Transactions" },
@@ -136,54 +134,44 @@ export default function Upload() {
     setError("");
     setProgress(0);
 
-    // ── Step 1: Upload to Firebase Storage ──────────────────
+    // ── Step 1: Read File locally in browser ──────────────────
     setStep(1);
-    const uploadId    = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    const storagePath = `statements/${user.uid}/${uploadId}.pdf`;
 
-    let uploadedPath;
+    let fileBuffer;
     try {
-      await new Promise((resolve, reject) => {
-        const storageRef  = ref(storage, storagePath);
-        const uploadTask  = uploadBytesResumable(storageRef, file, {
-          contentType: "application/pdf",
-        });
-
-        uploadTask.on(
-          "state_changed",
-          (snapshot) => {
-            const pct = Math.round(
-              (snapshot.bytesTransferred / snapshot.totalBytes) * 100
-            );
+      fileBuffer = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = (e) => reject(new Error("Failed to read file"));
+        reader.onprogress = (e) => {
+          if (e.lengthComputable) {
+            const pct = Math.round((e.loaded / e.total) * 100);
             setProgress(pct);
-          },
-          (err) => reject(err),
-          () => { uploadedPath = storagePath; resolve(); }
-        );
+          }
+        };
+        reader.readAsArrayBuffer(file);
       });
+      setProgress(100);
     } catch (err) {
-      setError("Upload failed. Check your connection and try again.");
+      setError("Read failed. Could not open statement file.");
       setStep(0);
       return;
     }
 
-    // ── Steps 2-4: Shown while Cloud Function runs ───────────
-    // Animate through unlock → detect → parse while we wait
-    setStep(2);
-    const stepTimer = setInterval(() => {
-      setStep((prev) => (prev < 4 ? prev + 1 : prev));
-    }, 900);
-
-    // ── Step 5: Call processStatement ───────────────────────
+    // ── Steps 2-5: Run local processing pipeline ───────────────
     try {
-      const processStatement = httpsCallable(functions, "processStatement");
       const response = await processStatement({
-        storagePath: uploadedPath,
+        fileBuffer,
         password:    password || "",
         fileName:    file.name,
+        onStep: (stepId) => {
+          if (stepId === "unlock") setStep(2);
+          else if (stepId === "detect") setStep(3);
+          else if (stepId === "parse") setStep(4);
+          else if (stepId === "save") setStep(5);
+        }
       });
 
-      clearInterval(stepTimer);
       setStep(5);
 
       const { bank, transactionCount, statementId, warnings: warns } = response.data;
@@ -192,7 +180,6 @@ export default function Upload() {
       if (warns && warns.length > 0) setWarnings(warns);
 
     } catch (err) {
-      clearInterval(stepTimer);
       setStep(0);
       setError(friendlyError(err));
     }

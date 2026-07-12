@@ -106,4 +106,4 @@ function parse(rows) {
   return transactions;
 }
 
-module.exports = { detect, parse };
+export { detect, parse };

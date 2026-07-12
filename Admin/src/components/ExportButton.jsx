@@ -10,8 +10,7 @@
  */
 
 import { useState, useCallback } from "react";
-import { httpsCallable } from "firebase/functions";
-import { functions } from "../firebase";
+import { listTransactions as listTransactionsFn } from "../services/api";
 import { Loader2, FileSpreadsheet, FileText } from "lucide-react";
 import * as XLSX from "xlsx";
 import { jsPDF } from "jspdf";
@@ -22,8 +21,6 @@ const GOLD_SOFT  = "#D9B65A";
 const BORDER_SOFT= "#1B202B";
 const TEXT_FAINT = "#5F6678";
 const GREEN      = "#34D399";
-
-const listTransactionsFn = httpsCallable(functions, "listTransactions");
 
 /**
  * Formats a number as Indian currency string

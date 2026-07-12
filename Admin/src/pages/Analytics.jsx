@@ -4,11 +4,8 @@
  */
 
 import { useState, useEffect } from "react";
-import { httpsCallable } from "firebase/functions";
-import { functions } from "../firebase";
+import { listTransactions as listTransactionsFn } from "../services/api";
 import { TrendingUp, TrendingDown, PieChart, BarChart3, Store, Lightbulb, Landmark } from "lucide-react";
-
-const listTransactionsFn = httpsCallable(functions, "listTransactions");
 
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 

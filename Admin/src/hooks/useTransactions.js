@@ -7,10 +7,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { httpsCallable } from "firebase/functions";
-import { functions } from "../firebase";
-
-const listTransactionsFn = httpsCallable(functions, "listTransactions");
+import { listTransactions as listTransactionsFn } from "../services/api";
 
 /**
  * Validates filter combinations before sending to backend

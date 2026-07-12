@@ -28,7 +28,7 @@ const TEXT_DIM   = "#9AA1B2";
 const TEXT_FAINT = "#5F6678";
 
 const inputClass =
-  "w-full rounded-xl px-4 py-3.5 outline-none transition-all";
+  "w-full rounded-xl px-4 py-2.5 outline-none transition-all text-sm";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -97,120 +97,91 @@ export default function Login() {
   }
 
   return (
-    <div className="h-screen flex font-sans" style={{ backgroundColor: INK }}>
+    <div className="min-h-screen flex items-center justify-center font-sans relative overflow-hidden py-6 px-6" style={{ backgroundColor: INK }}>
       <style>{FONT_STACK}</style>
 
-      {/* Decorative Left Side — full-cover bank photograph */}
-      <div className="hidden lg:flex w-1/2 h-screen flex-col justify-between p-12 relative overflow-hidden">
-        <img
-          src={HERO_IMAGE}
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 w-full h-full object-cover"
-          style={{ animation: "kenBurns 16s ease-out both" }}
-        />
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(180deg, rgba(10,14,23,0.55) 0%, rgba(10,14,23,0.72) 55%, rgba(10,14,23,0.94) 100%)",
-          }}
-        />
-        <div
-          className="absolute inset-0"
-          style={{ background: `linear-gradient(90deg, ${INK} 0%, transparent 30%)` }}
-        />
+      {/* Decorative Full-screen Backdrop Image */}
+      <img
+        src={HERO_IMAGE}
+        alt=""
+        aria-hidden="true"
+        className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none"
+        style={{ animation: "kenBurns 20s ease-out both" }}
+      />
+      
+      {/* Dark Vignette Overlay */}
+      <div
+        className="absolute inset-0 pointer-events-none select-none"
+        style={{
+          background:
+            "linear-gradient(135deg, rgba(10,14,23,0.85) 0%, rgba(10,14,23,0.92) 50%, rgba(10,14,23,0.98) 100%)",
+        }}
+      />
 
-        {/* Brand Logo */}
-        <div className="flex items-center gap-2.5 relative z-10" style={{ animation: "fadeUp 0.5s ease both" }}>
+      {/* Ambient Gold Glow Accent */}
+      <div
+        className="absolute -top-24 -right-24 w-[28rem] h-[28rem] rounded-full pointer-events-none"
+        style={{ background: `radial-gradient(circle, ${GOLD}15, transparent 70%)` }}
+      />
+
+      {/* Centered Content Container */}
+      <div className="w-full max-w-md relative z-10" style={{ animation: "fadeUp 0.5s ease both" }}>
+        
+        {/* Brand Logo & Name */}
+        <div className="flex items-center justify-center gap-2 mb-4">
           <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
             style={{
               backgroundColor: `${GOLD}1A`,
               border: `1px solid ${GOLD}40`,
               animation: "floatSlow 4.5s ease-in-out infinite",
             }}
           >
-            <Landmark size={18} style={{ color: GOLD_SOFT }} />
+            <Landmark size={16} style={{ color: GOLD_SOFT }} />
           </div>
           <span className="text-lg font-semibold tracking-wide" style={{ fontFamily: "'Fraunces', serif", color: TEXT }}>
             Ledger
           </span>
         </div>
 
-        {/* Hero Quote */}
-        <div className="space-y-4 relative z-10" style={{ animation: "fadeUp 0.6s ease both", animationDelay: "100ms" }}>
-          <p className="text-xs font-semibold tracking-[0.2em] uppercase" style={{ color: GOLD_SOFT }}>
-            Smart Reconciliation
-          </p>
-          <h2
-            className="text-4xl leading-tight max-w-md font-semibold"
-            style={{ fontFamily: "'Fraunces', serif", color: TEXT }}
-          >
-            Digitize statements, reconcile transactions.
-          </h2>
-          <p className="text-sm max-w-sm" style={{ color: "#C6CBD9" }}>
-            Powered by OCR parsing and direct ledger integration for instant bank statement analysis.
-          </p>
-        </div>
-
-        {/* Copyright + security badge */}
+        {/* Login Card with Frosted Glass Effect */}
         <div
-          className="flex items-center justify-between relative z-10 text-xs"
-          style={{ color: TEXT_FAINT, animation: "fadeUp 0.6s ease both", animationDelay: "180ms" }}
+          className="rounded-3xl p-6 shadow-2xl transition-all duration-300"
+          style={{
+            backgroundColor: "rgba(18, 22, 31, 0.72)",
+            backdropFilter: "blur(16px)",
+            WebkitBackdropFilter: "blur(16px)",
+            border: `1px solid rgba(255, 255, 255, 0.08)`,
+            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
+          }}
         >
-          <span>© {new Date().getFullYear()} Ledger Inc. All rights reserved.</span>
-          <span className="flex items-center gap-1.5">
-            <ShieldCheck size={13} style={{ color: "#34D399" }} />
-            Bank-grade encryption
-          </span>
-        </div>
-      </div>
-
-      {/* Right Login Section */}
-      <div className="w-full lg:w-1/2 h-screen flex items-center justify-center px-6 relative overflow-hidden">
-        <div
-          className="absolute -top-24 -right-24 w-96 h-96 rounded-full pointer-events-none"
-          style={{ background: `radial-gradient(circle, ${GOLD}14, transparent 70%)` }}
-        />
-
-        <div
-          className="w-full max-w-md rounded-3xl p-8 shadow-2xl relative z-10"
-          style={{ backgroundColor: SURFACE, border: `1px solid ${BORDER}`, animation: "fadeUp 0.5s ease both" }}
-        >
-          <div className="text-center mb-8">
-            <div
-              className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4 lg:hidden"
-              style={{ backgroundColor: `${GOLD}1A`, border: `1px solid ${GOLD}40` }}
-            >
-              <Landmark size={20} style={{ color: GOLD_SOFT }} />
-            </div>
-            <h1 className="text-3xl font-semibold tracking-tight" style={{ fontFamily: "'Fraunces', serif", color: TEXT }}>
+          <div className="text-center mb-4">
+            <h1 className="text-xl font-semibold tracking-tight" style={{ fontFamily: "'Fraunces', serif", color: TEXT }}>
               Welcome Back
             </h1>
-            <p className="text-sm mt-2" style={{ color: TEXT_FAINT }}>
-              Sign in to manage your statements
+            <p className="text-[11px] mt-1" style={{ color: TEXT_DIM }}>
+              Sign in to digitize and manage your statements
             </p>
           </div>
 
           {/* Error Alert */}
           {error && (
             <div
-              className="flex items-center gap-2.5 mb-5 p-3.5 rounded-xl text-sm"
+              className="flex items-center gap-2.5 mb-4 p-3 rounded-xl text-xs"
               style={{ backgroundColor: "#F871710D", border: "1px solid #F8717133", color: "#F87171" }}
             >
-              <AlertCircle size={16} className="shrink-0" />
+              <AlertCircle size={14} className="shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
-          {/* Email */}
-          <div className="mb-5">
-            <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: TEXT_DIM }}>
+          {/* Email Input */}
+          <div className="mb-3">
+            <label className="block text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: TEXT_DIM }}>
               Email Address
             </label>
             <div className="relative">
-              <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: TEXT_FAINT }} />
+              <Mail size={14} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: TEXT_FAINT }} />
               <input
                 type="email"
                 value={email}
@@ -225,13 +196,13 @@ export default function Login() {
             </div>
           </div>
 
-          {/* Password */}
-          <div className="mb-8">
-            <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: TEXT_DIM }}>
+          {/* Password Input */}
+          <div className="mb-5">
+            <label className="block text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: TEXT_DIM }}>
               Password
             </label>
             <div className="relative">
-              <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: TEXT_FAINT }} />
+              <Lock size={14} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: TEXT_FAINT }} />
               <input
                 type={showPassword ? "text" : "password"}
                 value={password}
@@ -246,36 +217,49 @@ export default function Login() {
               <button
                 type="button"
                 onClick={() => setShowPw(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 transition-colors"
+                className="absolute right-4 top-1/2 -translate-y-1/2 transition-colors cursor-pointer"
                 style={{ color: TEXT_FAINT }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = TEXT_DIM)}
                 onMouseLeave={(e) => (e.currentTarget.style.color = TEXT_FAINT)}
               >
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
               </button>
             </div>
           </div>
 
-          {/* Login Button */}
+          {/* Login Submit Button */}
           <button
             onClick={handleLogin}
             disabled={loading}
-            className="w-full py-3.5 rounded-xl font-semibold active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-            style={{ backgroundColor: GOLD, color: INK, boxShadow: `0 10px 24px -12px ${GOLD}88` }}
+            className="w-full py-3 rounded-xl font-semibold active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-xs"
+            style={{ backgroundColor: GOLD, color: INK, boxShadow: `0 6px 16px -6px ${GOLD}AA` }}
             onMouseEnter={(e) => { if (!loading) e.currentTarget.style.backgroundColor = GOLD_SOFT; }}
             onMouseLeave={(e) => { if (!loading) e.currentTarget.style.backgroundColor = GOLD; }}
           >
             {loading ? "Signing In..." : "Sign In"}
           </button>
 
-          {/* Signup Link */}
-          <p className="text-center text-sm mt-6" style={{ color: TEXT_FAINT }}>
+          {/* Switch to Signup Link */}
+          <p className="text-center text-[11px] mt-4" style={{ color: TEXT_FAINT }}>
             Don't have an account?{" "}
             <Link to="/signup" className="font-semibold transition-colors" style={{ color: GOLD_SOFT }}>
               Create one
             </Link>
           </p>
         </div>
+
+        {/* Footer (Copyright & Security) */}
+        <div
+          className="mt-4 flex flex-col sm:flex-row items-center justify-between text-[10px] gap-2 px-2 text-center"
+          style={{ color: TEXT_FAINT }}
+        >
+          <span>© {new Date().getFullYear()} Ledger Inc.</span>
+          <span className="flex items-center gap-1">
+            <ShieldCheck size={12} style={{ color: "#34D399" }} />
+            Bank-grade encryption
+          </span>
+        </div>
+
       </div>
     </div>
   );

@@ -14,9 +14,7 @@
 
 import { useState, useCallback } from "react";
 import { AlertTriangle, X, CheckCircle, Calendar, Tag, Hash, FileText, HelpCircle, Receipt } from "lucide-react";
-import { httpsCallable } from "firebase/functions";
-import { functions } from "../firebase";
-
+import { addLedgerEntry as addLedgerEntryFn } from "../services/api";
 import { useFilterParams }   from "../hooks/useFilterParams";
 import { useTransactions }   from "../hooks/useTransactions";
 import FilterBar             from "../components/FilterBar";
@@ -24,8 +22,6 @@ import FilterChips           from "../components/FilterChips";
 import TransactionTable      from "../components/TransactionTable";
 import StatementSelector     from "../components/StatementSelector";
 import ExportButton          from "../components/ExportButton";
-
-const addLedgerEntryFn = httpsCallable(functions, "addLedgerEntry");
 
 const INK        = "#0A0E17";
 const SURFACE    = "#12161F";

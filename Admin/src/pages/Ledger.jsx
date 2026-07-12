@@ -7,15 +7,11 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { httpsCallable } from "firebase/functions";
-import { functions } from "../firebase";
+import { addLedgerEntry as addLedgerEntryFn, listLedgerEntries as listLedgerEntriesFn } from "../services/api";
 import {
   Plus, BookOpen, Calendar, ArrowUpCircle, ArrowDownCircle,
   Hash, DollarSign, Tag, RefreshCw, X, AlertCircle, Loader2
 } from "lucide-react";
-
-const addLedgerEntryFn = httpsCallable(functions, "addLedgerEntry");
-const listLedgerEntriesFn = httpsCallable(functions, "listLedgerEntries");
 
 const CATEGORIES = [
   "Salary", "Food", "Rent", "Utility", "Shopping",
